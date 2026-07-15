@@ -50,7 +50,7 @@ class DatingAppApp extends StatelessWidget {
           surface: AppColors.surface,
           error: AppColors.error,
         ),
-        
+
         // Navigation bar themes
         appBarTheme: const AppBarTheme(
           backgroundColor: AppColors.background,

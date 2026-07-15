@@ -1,7 +1,10 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dating_app/core/models/user_model.dart';
 import 'package:dating_app/core/repositories/swipe_repository.dart';
 import 'package:dating_app/features/swipe/presentation/viewmodels/swipe_viewmodel.dart';
+import 'package:dating_app/features/swipe/presentation/widgets/profile_transition_container.dart';
+import 'package:dating_app/features/swipe/presentation/widgets/floating_expand_button.dart';
 
 // Create a Fake implementation of SwipeRepository for Unit Testing
 class FakeSwipeRepository implements SwipeRepository {
@@ -112,6 +115,78 @@ void main() {
       expect(viewModel.state.profiles.first, topUser);
       expect(viewModel.state.lastSwipedUser, null);
       expect(viewModel.state.lastSwipeType, null);
+    });
+  });
+
+  group('Swipe Card Widget Tests', () {
+    testWidgets('ProfileTransitionContainer layout and expansion tests', (WidgetTester tester) async {
+      const user = UserModel(
+        id: 'test_user',
+        name: 'Charlotte',
+        age: 26,
+        gender: 'female',
+        bio: 'Charlotte biography details here.',
+        photos: [],
+        distance: 4.2,
+        isVerified: true,
+        isPremium: true,
+        interests: ['Hiking', 'Art'],
+        jobTitle: 'Product Designer',
+        company: 'Apple',
+        locationName: 'Cupertino',
+      );
+
+      bool expansionChangedCalled = false;
+      bool isExpandedResult = false;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: RepaintBoundary(
+              child: SizedBox(
+                width: 375,
+                height: 600,
+                child: ProfileTransitionContainer(
+                  user: user,
+                  onExpansionChanged: (val) {
+                    expansionChangedCalled = true;
+                    isExpandedResult = val;
+                  },
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      // Verify name, age, job details are rendered
+      expect(find.text('Charlotte, 26'), findsOneWidget);
+      expect(find.text('Product Designer at Apple'), findsOneWidget);
+      expect(find.text('Cupertino • 4.2 miles away'), findsOneWidget);
+
+      // Details section should NOT be present (since it is collapsed initially)
+      expect(find.text('The Basics'), findsNothing);
+      expect(find.text('Lifestyle'), findsNothing);
+
+      // Find the expand button (FloatingExpandButton) and tap it
+      final buttonFinder = find.byType(FloatingExpandButton);
+      expect(buttonFinder, findsOneWidget);
+
+      await tester.tap(buttonFinder);
+      await tester.pump(); // Process tap gesture synchronously
+
+      try {
+        // Verify expansion callback was called
+        expect(expansionChangedCalled, true);
+        expect(isExpandedResult, true);
+
+        // Details sections should now be present (expanded state)
+        expect(find.text('The Basics'), findsOneWidget);
+        expect(find.text('Lifestyle'), findsOneWidget);
+      } finally {
+        // Disposes of the widget tree, which stops the infinite pulse animation timers
+        await tester.pumpWidget(const SizedBox.shrink());
+      }
     });
   });
 }

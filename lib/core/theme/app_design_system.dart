@@ -110,6 +110,8 @@ class AppIcons {
   static const IconData location = CupertinoIcons.location_fill;
   static const IconData settings = CupertinoIcons.settings;
   static const IconData back = CupertinoIcons.left_chevron;
+  static const IconData down = CupertinoIcons.chevron_down;
+  static const IconData up = CupertinoIcons.chevron_up;
   static const IconData send = CupertinoIcons.paperplane_fill;
   static const IconData search = CupertinoIcons.search;
   static const IconData filter = CupertinoIcons.slider_horizontal_3;
