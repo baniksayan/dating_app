@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/config/app_router.dart';
 import 'core/storage/hive_service.dart';
 import 'core/theme/app_colors.dart';
-import 'core/theme/app_typography.dart';
 import 'core/helpers/logger_helper.dart';
 
 void main() async {
@@ -16,20 +15,20 @@ void main() async {
 
   runApp(
     const ProviderScope(
-      child: AntigravityApp(),
+      child: DatingAppApp(),
     ),
   );
 }
 
-class AntigravityApp extends StatelessWidget {
-  const AntigravityApp({super.key});
+class DatingAppApp extends StatelessWidget {
+  const DatingAppApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    Logger.info('Launching Premium Antigravity App...', 'Main');
+    Logger.info('Launching Premium DatingApp App...', 'Main');
     
     return MaterialApp.router(
-      title: 'Antigravity Premium',
+      title: 'DatingApp Premium',
       debugShowCheckedModeBanner: false,
       
       // Setup GoRouter

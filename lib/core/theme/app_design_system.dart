@@ -43,7 +43,7 @@ class AppShadows {
   
   static List<BoxShadow> get subtle => [
         BoxShadow(
-          color: AppColors.rawBlack.withOpacity(0.04),
+          color: AppColors.rawBlack.withValues(alpha: 0.04),
           blurRadius: 8.0,
           offset: const Offset(0, 2),
         ),
@@ -51,13 +51,13 @@ class AppShadows {
 
   static List<BoxShadow> get premium => [
         BoxShadow(
-          color: AppColors.rawBlack.withOpacity(0.25),
+          color: AppColors.rawBlack.withValues(alpha: 0.25),
           blurRadius: 20.0,
           spreadRadius: -4.0,
           offset: const Offset(0, 10),
         ),
         BoxShadow(
-          color: AppColors.rawBlack.withOpacity(0.12),
+          color: AppColors.rawBlack.withValues(alpha: 0.12),
           blurRadius: 8.0,
           spreadRadius: -2.0,
           offset: const Offset(0, 4),
@@ -66,7 +66,7 @@ class AppShadows {
 
   static List<BoxShadow> get cardFloating => [
         BoxShadow(
-          color: AppColors.rawBlack.withOpacity(0.4),
+          color: AppColors.rawBlack.withValues(alpha: 0.4),
           blurRadius: 30.0,
           spreadRadius: 2.0,
           offset: const Offset(0, 15),
@@ -75,12 +75,12 @@ class AppShadows {
 
   static List<Shadow> get textShadow => [
         Shadow(
-          color: AppColors.rawBlack.withOpacity(0.6),
+          color: AppColors.rawBlack.withValues(alpha: 0.6),
           blurRadius: 10.0,
           offset: const Offset(0, 2),
         ),
         Shadow(
-          color: AppColors.rawBlack.withOpacity(0.3),
+          color: AppColors.rawBlack.withValues(alpha: 0.3),
           blurRadius: 2.0,
           offset: const Offset(0, 1),
         ),
@@ -91,7 +91,7 @@ class AppIcons {
   AppIcons._();
 
   // Navigation Icons
-  static const IconData swipe = CupertinoIcons.double_tilt_card;
+  static const IconData swipe = CupertinoIcons.square_on_square;
   static const IconData explore = CupertinoIcons.compass;
   static const IconData likes = CupertinoIcons.heart;
   static const IconData chat = CupertinoIcons.bubble_left_bubble_right;

@@ -155,11 +155,7 @@ class SwipeViewModel extends StateNotifier<SwipeState> {
 
     try {
       // Remove swipe history record in the repository
-      // Resetting the specific key in Hive
-      final likesBox = SwipeRepositoryImpl()._hiveService.likesBox;
-      final matchesBox = SwipeRepositoryImpl()._hiveService.matchesBox;
-      await likesBox.delete(lastUser.id);
-      await matchesBox.delete(lastUser.id);
+      await _repository.undoSwipe(lastUser.id);
       Logger.info('Successfully rewound swipe for ${lastUser.name}', 'SwipeViewModel');
     } catch (e) {
       Logger.error('Error rewinding swipe', e, null, 'SwipeViewModel');

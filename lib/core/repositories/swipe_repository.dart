@@ -18,6 +18,9 @@ abstract class SwipeRepository {
 
   /// Clear all swiped states and reset the deck (for testing/looping profiles)
   Future<void> resetSwipeHistory();
+
+  /// Undo the last swipe action (remove from likes and matches)
+  Future<void> undoSwipe(String userId);
 }
 
 class SwipeRepositoryImpl implements SwipeRepository {
@@ -81,5 +84,12 @@ class SwipeRepositoryImpl implements SwipeRepository {
     Logger.info('Resetting swipe history box', 'SwipeRepository');
     await _hiveService.likesBox.clear();
     await _hiveService.matchesBox.clear();
+  }
+
+  @override
+  Future<void> undoSwipe(String userId) async {
+    Logger.info('Undoing swipe for user: $userId', 'SwipeRepository');
+    await _hiveService.likesBox.delete(userId);
+    await _hiveService.matchesBox.delete(userId);
   }
 }

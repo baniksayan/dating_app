@@ -4,10 +4,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/extensions/build_context_ext.dart';
+import '../../../../core/models/user_model.dart';
 import '../../../../core/theme/app_design_system.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../../../core/widgets/primary_button.dart';
 import '../../../../core/widgets/profile_avatar.dart';
+import '../../../../core/widgets/swipe_action_button.dart';
 import '../../../../core/config/app_router.dart';
 import '../viewmodels/swipe_viewmodel.dart';
 import '../widgets/swipe_card.dart';
@@ -64,8 +66,10 @@ class _SwipeScreenState extends ConsumerState<SwipeScreen> {
             bottom: false,
             child: Column(
               children: [
-                // Top Custom Navigation Bar
-                _buildTopBar(context),
+                // Top Custom Navigation Bar - Paint Isolated
+                RepaintBoundary(
+                  child: _buildTopBar(context),
+                ),
                 
                 // Active Swipe Deck
                 Expanded(
@@ -80,7 +84,10 @@ class _SwipeScreenState extends ConsumerState<SwipeScreen> {
 
           // 3. Match Overlay Dialog (Shown only during a Match event)
           if (swipeState.matchedUser != null)
-            _buildMatchOverlay(context, swipeState.matchedUser!, viewModel),
+            _MatchOverlayWidget(
+              matchedUser: swipeState.matchedUser!,
+              viewModel: viewModel,
+            ),
         ],
       ),
     );
@@ -96,7 +103,7 @@ class _SwipeScreenState extends ConsumerState<SwipeScreen> {
           Row(
             children: [
               Text(
-                'Antigravity',
+                'DatingApp',
                 style: context.typography.headline.copyWith(
                   fontWeight: FontWeight.w900,
                   color: context.colors.primary,
@@ -107,7 +114,7 @@ class _SwipeScreenState extends ConsumerState<SwipeScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  border: Border.all(color: context.colors.accent.withOpacity(0.5)),
+                  border: Border.all(color: context.colors.accent.withValues(alpha: 0.5)),
                   borderRadius: context.radius.borderPill,
                 ),
                 child: Text(
@@ -213,8 +220,10 @@ class _SwipeScreenState extends ConsumerState<SwipeScreen> {
 
         const SizedBox(height: 20),
 
-        // Floating Action Controls Row
-        _buildActionRow(context, state, viewModel),
+        // Floating Action Controls Row - Paint Isolated
+        RepaintBoundary(
+          child: _buildActionRow(context, state, viewModel),
+        ),
       ],
     );
   }
@@ -228,46 +237,45 @@ class _SwipeScreenState extends ConsumerState<SwipeScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           // 1. Rewind Button
-          _buildActionButton(
+          SwipeActionButton(
             icon: AppIcons.rewind,
-            iconColor: canRewind ? context.colors.accent : context.colors.textSecondary.withOpacity(0.3),
-            backgroundColor: context.colors.card,
+            iconColor: canRewind ? context.colors.accent : context.colors.textSecondary.withValues(alpha: 0.3),
             size: 46,
             onTap: canRewind ? viewModel.rewind : null,
+            semanticsLabel: 'Rewind last swipe',
           ),
 
-          // 2. Dislike (X) Button
-          _buildActionButton(
+          // 2. Dislike (Nope) Button
+          SwipeActionButton(
             icon: AppIcons.dislike,
             iconColor: context.colors.swipeDislike,
-            backgroundColor: context.colors.card,
             size: 56,
             onTap: state.profiles.isNotEmpty ? () => _triggerButtonSwipe(SwipeDirection.left) : null,
+            semanticsLabel: 'Dislike profile',
           ),
 
-          // 3. Super Like (Star) Button
-          _buildActionButton(
+          // 3. Super Like Button
+          SwipeActionButton(
             icon: AppIcons.superlike,
             iconColor: context.colors.swipeSuperLike,
-            backgroundColor: context.colors.card,
             size: 46,
             onTap: state.profiles.isNotEmpty ? () => _triggerButtonSwipe(SwipeDirection.up) : null,
+            semanticsLabel: 'Super like profile',
           ),
 
-          // 4. Like (Heart) Button
-          _buildActionButton(
+          // 4. Like Button
+          SwipeActionButton(
             icon: AppIcons.like,
             iconColor: context.colors.swipeLike,
-            backgroundColor: context.colors.card,
             size: 56,
             onTap: state.profiles.isNotEmpty ? () => _triggerButtonSwipe(SwipeDirection.right) : null,
+            semanticsLabel: 'Like profile',
           ),
 
-          // 5. Boost (Lightning) Button - Premium stub
-          _buildActionButton(
+          // 5. Boost Button - Premium stub
+          SwipeActionButton(
             icon: AppIcons.boost,
             iconColor: Colors.amber,
-            backgroundColor: context.colors.card,
             size: 46,
             onTap: () {
               HapticFeedback.vibrate();
@@ -281,45 +289,9 @@ class _SwipeScreenState extends ConsumerState<SwipeScreen> {
                 ),
               );
             },
+            semanticsLabel: 'Boost profile',
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildActionButton({
-    required IconData icon,
-    required Color iconColor,
-    required Color backgroundColor,
-    required double size,
-    required VoidCallback? onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap != null
-          ? () {
-              HapticFeedback.mediumImpact();
-              onTap();
-            }
-          : null,
-      child: AnimatedOpacity(
-        opacity: onTap == null ? 0.4 : 1.0,
-        duration: AppDurations.quick,
-        child: Container(
-          width: size,
-          height: size,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: backgroundColor,
-            border: AppBorders.glass,
-            boxShadow: AppShadows.subtle,
-          ),
-          alignment: Alignment.center,
-          child: Icon(
-            icon,
-            color: iconColor,
-            size: size * 0.45,
-          ),
-        ),
       ),
     );
   }
@@ -362,106 +334,193 @@ class _SwipeScreenState extends ConsumerState<SwipeScreen> {
       ),
     );
   }
+}
 
-  Widget _buildMatchOverlay(BuildContext context, UserModel matchedUser, SwipeViewModel viewModel) {
-    return Positioned.fill(
-      child: GlassCard(
-        blurAmount: AppBlur.heavy,
-        backgroundColor: Colors.black.withOpacity(0.85),
-        border: const Border.fromBorderSide(BorderSide.none),
-        child: SafeArea(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              // Title Header
-              Column(
-                children: [
-                  Text(
-                    'IT\'S A MATCH!',
-                    style: context.typography.displayLarge.copyWith(
-                      color: context.colors.accent,
-                      letterSpacing: 4.0,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'You and ${matchedUser.name} liked each other.',
-                    style: context.typography.body.copyWith(
-                      color: context.colors.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
+class _MatchOverlayWidget extends StatefulWidget {
+  final UserModel matchedUser;
+  final SwipeViewModel viewModel;
 
-              // Side-by-side Overlapping Avatar Images
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Current User Stub Avatar
-                  Transform.translate(
-                    offset: const Offset(15, 0),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        boxShadow: AppShadows.cardFloating,
-                      ),
-                      child: const ProfileAvatar(
-                        imageUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=400',
-                        radius: 64,
-                        isVerified: true,
-                        isPremium: true,
-                      ),
-                    ),
-                  ),
+  const _MatchOverlayWidget({
+    required this.matchedUser,
+    required this.viewModel,
+  });
 
-                  // Matched User Avatar
-                  Transform.translate(
-                    offset: const Offset(-15, 0),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        boxShadow: AppShadows.cardFloating,
-                      ),
-                      child: ProfileAvatar(
-                        imageUrl: matchedUser.photos.isNotEmpty ? matchedUser.photos.first : '',
-                        radius: 64,
-                        isVerified: matchedUser.isVerified,
-                        isPremium: matchedUser.isPremium,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+  @override
+  State<_MatchOverlayWidget> createState() => _MatchOverlayWidgetState();
+}
 
-              // Action buttons row
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 40.0),
-                child: Column(
+class _MatchOverlayWidgetState extends State<_MatchOverlayWidget>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _fadeAnimation;
+  late Animation<double> _scaleAnimation;
+  late Animation<Offset> _leftAvatarSlide;
+  late Animation<Offset> _rightAvatarSlide;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    );
+
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.0, 0.4, curve: Curves.easeIn),
+      ),
+    );
+
+    _scaleAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.2, 0.8, curve: Curves.elasticOut),
+      ),
+    );
+
+    _leftAvatarSlide = Tween<Offset>(
+      begin: const Offset(-2.0, 0.0),
+      end: const Offset(0.12, 0.0), // Interlock overlap position
+    ).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.3, 0.9, curve: Curves.easeOutBack),
+      ),
+    );
+
+    _rightAvatarSlide = Tween<Offset>(
+      begin: const Offset(2.0, 0.0),
+      end: const Offset(-0.12, 0.0), // Interlock overlap position
+    ).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.3, 0.9, curve: Curves.easeOutBack),
+      ),
+    );
+
+    _controller.forward();
+    HapticFeedback.lightImpact();
+    Future.delayed(const Duration(milliseconds: 300), () {
+      HapticFeedback.vibrate();
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _fadeAnimation,
+      child: Positioned.fill(
+        child: GlassCard(
+          blurAmount: AppBlur.heavy,
+          backgroundColor: Colors.black.withValues(alpha: 0.85),
+          border: const Border.fromBorderSide(BorderSide.none),
+          child: SafeArea(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                // Title Header
+                ScaleTransition(
+                  scale: _scaleAnimation,
+                  child: Column(
+                    children: [
+                      Text(
+                        'IT\'S A MATCH!',
+                        style: context.typography.displayLarge.copyWith(
+                          color: context.colors.accent,
+                          letterSpacing: 4.0,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'You and ${widget.matchedUser.name} liked each other.',
+                        style: context.typography.body.copyWith(
+                          color: context.colors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Side-by-side Overlapping Avatar Images
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    PrimaryButton(
-                      text: 'Send Message',
-                      backgroundColor: context.colors.accent,
-                      textColor: context.colors.background,
-                      onTap: () {
-                        viewModel.dismissMatch();
-                        context.pushNamed(
-                          AppRoutes.chatDetail,
-                          pathParameters: {'id': matchedUser.id},
-                        );
-                      },
+                    // Current User Stub Avatar
+                    SlideTransition(
+                      position: _leftAvatarSlide,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          boxShadow: AppShadows.cardFloating,
+                        ),
+                        child: const ProfileAvatar(
+                          imageUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=400',
+                          radius: 64,
+                          isVerified: true,
+                          isPremium: true,
+                        ),
+                      ),
                     ),
-                    const SizedBox(height: 16),
-                    SecondaryButton(
-                      text: 'Keep Swiping',
-                      borderColor: context.colors.accent.withOpacity(0.5),
-                      textColor: context.colors.accent,
-                      onTap: viewModel.dismissMatch,
+
+                    // Matched User Avatar
+                    SlideTransition(
+                      position: _rightAvatarSlide,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          boxShadow: AppShadows.cardFloating,
+                        ),
+                        child: ProfileAvatar(
+                          imageUrl: widget.matchedUser.photos.isNotEmpty ? widget.matchedUser.photos.first : '',
+                          radius: 64,
+                          isVerified: widget.matchedUser.isVerified,
+                          isPremium: widget.matchedUser.isPremium,
+                        ),
+                      ),
                     ),
                   ],
                 ),
-              ),
-            ],
+
+                // Action buttons row
+                ScaleTransition(
+                  scale: _scaleAnimation,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 40.0),
+                    child: Column(
+                      children: [
+                        PrimaryButton(
+                          text: 'Send Message',
+                          backgroundColor: context.colors.accent,
+                          textColor: context.colors.background,
+                          onTap: () {
+                            widget.viewModel.dismissMatch();
+                            context.pushNamed(
+                              AppRoutes.chatDetail,
+                              pathParameters: {'id': widget.matchedUser.id},
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        SecondaryButton(
+                          text: 'Keep Swiping',
+                          borderColor: context.colors.accent.withValues(alpha: 0.5),
+                          textColor: context.colors.accent,
+                          onTap: widget.viewModel.dismissMatch,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

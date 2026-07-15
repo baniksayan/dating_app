@@ -1,7 +1,8 @@
 import 'package:flutter/widgets.dart';
-import 'package:flutter/material.dart' show Colors, Icons;
 import '../extensions/build_context_ext.dart';
 import '../theme/app_design_system.dart';
+import 'badges.dart';
+import 'app_network_image.dart';
 
 class ProfileAvatar extends StatelessWidget {
   final String? imageUrl;
@@ -43,28 +44,20 @@ class ProfileAvatar extends StatelessWidget {
           ),
           child: ClipOval(
             child: imageUrl != null && imageUrl!.isNotEmpty
-                ? Image.network(
-                    imageUrl!,
-                    fit: BoxFit.cover,
-                    loadingBuilder: (context, child, loadingProgress) {
-                      if (loadingProgress == null) return child;
-                      return Container(
-                        color: context.colors.card,
-                        alignment: Alignment.center,
-                        child: const Text('...'),
-                      );
-                    },
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        color: context.colors.card,
-                        alignment: Alignment.center,
-                        child: Icon(
-                          AppIcons.profile,
-                          color: context.colors.textSecondary,
-                          size: radius * 0.8,
-                        ),
-                      );
-                    },
+                ? AppNetworkImage(
+                    imageUrl: imageUrl!,
+                    width: diameter,
+                    height: diameter,
+                    borderRadius: BorderRadius.circular(radius),
+                    errorWidget: Container(
+                      color: context.colors.card,
+                      alignment: Alignment.center,
+                      child: Icon(
+                        AppIcons.profile,
+                        color: context.colors.textSecondary,
+                        size: radius * 0.8,
+                      ),
+                    ),
                   )
                 : Icon(
                     AppIcons.profile,
@@ -76,18 +69,18 @@ class ProfileAvatar extends StatelessWidget {
 
         // Verified Badge Overlay
         if (isVerified)
-          Positioned(
+          const Positioned(
             right: 0,
             bottom: 0,
-            child: const VerifiedBadge(size: 20),
+            child: VerifiedBadge(size: 20),
           ),
 
         // Premium Badge Overlay (If verified is not present or placed differently)
         if (isPremium && !isVerified)
-          Positioned(
+          const Positioned(
             right: 0,
             bottom: 0,
-            child: const PremiumBadge(size: 20),
+            child: PremiumBadge(size: 20),
           ),
 
         // Online Dot Indicator
@@ -109,54 +102,6 @@ class ProfileAvatar extends StatelessWidget {
             ),
           ),
       ],
-    );
-  }
-}
-
-class VerifiedBadge extends StatelessWidget {
-  final double size;
-  const VerifiedBadge({super.key, this.size = 18.0});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        shape: BoxShape.circle,
-      ),
-      child: Center(
-        child: Icon(
-          AppIcons.verified,
-          color: const Color(0xFF4A90E2), // Classic verified blue or design accent
-          size: size * 0.85,
-        ),
-      ),
-    );
-  }
-}
-
-class PremiumBadge extends StatelessWidget {
-  final double size;
-  const PremiumBadge({super.key, this.size = 18.0});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        gradient: AppGradients.gold,
-        shape: BoxShape.circle,
-      ),
-      child: Center(
-        child: Icon(
-          AppIcons.premium,
-          color: context.colors.background,
-          size: size * 0.6,
-        ),
-      ),
     );
   }
 }

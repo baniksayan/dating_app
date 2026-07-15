@@ -1,13 +1,14 @@
 import 'dart:math';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
-import 'package:flutter/material.dart' show Colors, Material, Theme; // Import for basic material icons/chips if needed, otherwise paint custom
+import 'package:flutter/material.dart' show Colors;
 import '../../../../core/extensions/build_context_ext.dart';
 import '../../../../core/theme/app_design_system.dart';
 import '../../../../core/models/user_model.dart';
 import '../../../../core/helpers/formatter_helper.dart';
 import '../../../../core/widgets/glass_card.dart';
-import '../../../../core/widgets/profile_avatar.dart';
+import '../../../../core/widgets/badges.dart';
+import '../../../../core/widgets/app_network_image.dart';
 
 enum SwipeDirection { left, right, up }
 
@@ -42,6 +43,14 @@ class _SwipeCardState extends State<SwipeCard> with SingleTickerProviderStateMix
   double _offsetY = 0.0;
   bool _isDragging = false;
   int _activePhotoIndex = 0;
+  double _touchStartY = 0.0;
+
+  Alignment get _rotationAlignment {
+    if (_touchStartY == 0.0) return Alignment.bottomCenter;
+    return _touchStartY < (context.screenHeight * 0.35)
+        ? Alignment.bottomCenter
+        : Alignment.topCenter;
+  }
 
   // Configuration Constants
   static const double _swipeThreshold = 120.0;
@@ -186,9 +195,10 @@ class _SwipeCardState extends State<SwipeCard> with SingleTickerProviderStateMix
       builder: (context, constraints) {
         return GestureDetector(
           onPanStart: widget.isTopCard
-              ? (_) {
+              ? (details) {
                   setState(() {
                     _isDragging = true;
+                    _touchStartY = details.localPosition.dy;
                   });
                   _animController.stop();
                 }
@@ -218,29 +228,34 @@ class _SwipeCardState extends State<SwipeCard> with SingleTickerProviderStateMix
                 }
               : null,
           onTapUp: (details) => _handlePhotoTap(details, constraints),
-          child: AnimatedBuilder(
-            animation: _animController,
-            builder: (context, child) {
-              double currentX = _offsetX;
-              double currentY = _offsetY;
-              double angle = _offsetX * _rotationFactor * (pi / 180);
+          child: Semantics(
+            label: 'Profile card of ${widget.user.name}, age ${widget.user.age}, ${widget.user.jobTitle} at ${widget.user.company}. ${widget.user.bio}. Located ${Formatter.formatDistance(widget.user.distance)} away.',
+            child: AnimatedBuilder(
+              animation: _animController,
+              builder: (context, child) {
+                double currentX = _offsetX;
+                double currentY = _offsetY;
+                double angle = _offsetX * _rotationFactor * (pi / 180);
 
-              if (!_isDragging && _animController.isAnimating) {
-                currentX = _translationAnim.value.dx;
-                currentY = _translationAnim.value.dy;
-                angle = _rotationAnim.value;
-              }
+                if (!_isDragging && _animController.isAnimating) {
+                  currentX = _translationAnim.value.dx;
+                  currentY = _translationAnim.value.dy;
+                  angle = _rotationAnim.value;
+                }
 
-              return Transform.translate(
-                offset: Offset(currentX, currentY),
-                child: Transform.rotate(
-                  angle: angle,
-                  alignment: Alignment.bottomCenter,
-                  child: child,
-                ),
-              );
-            },
-            child: _buildCardContent(constraints),
+                return Transform.translate(
+                  offset: Offset(currentX, currentY),
+                  child: Transform.rotate(
+                    angle: angle,
+                    alignment: _rotationAlignment,
+                    child: child,
+                  ),
+                );
+              },
+              child: RepaintBoundary(
+                child: _buildCardContent(constraints),
+              ),
+            ),
           ),
         );
       },
@@ -268,35 +283,17 @@ class _SwipeCardState extends State<SwipeCard> with SingleTickerProviderStateMix
           children: [
             // Core Profile Image
             currentImageUrl.isNotEmpty
-                ? Image.network(
-                    currentImageUrl,
-                    fit: BoxFit.cover,
-                    loadingBuilder: (context, child, loadingProgress) {
-                      if (loadingProgress == null) return child;
-                      return Container(
-                        color: context.colors.background,
-                        child: Center(
-                          child: Container(
-                            width: 50,
-                            height: 50,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(color: context.colors.divider),
-                            ),
-                            alignment: Alignment.center,
-                            child: const Text('...', style: TextStyle(color: Colors.white)),
-                          ),
-                        ),
-                      );
-                    },
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        color: context.colors.card,
-                        child: Center(
-                          child: Icon(AppIcons.profile, size: 60, color: context.colors.textSecondary),
-                        ),
-                      );
-                    },
+                ? AppNetworkImage(
+                    imageUrl: currentImageUrl,
+                    width: constraints.maxWidth,
+                    height: constraints.maxHeight,
+                    borderRadius: context.radius.borderXxl,
+                    errorWidget: Container(
+                      color: context.colors.card,
+                      child: Center(
+                        child: Icon(AppIcons.profile, size: 60, color: context.colors.textSecondary),
+                      ),
+                    ),
                   )
                 : Container(
                     color: context.colors.card,
@@ -331,7 +328,7 @@ class _SwipeCardState extends State<SwipeCard> with SingleTickerProviderStateMix
               left: 0,
               right: 0,
               height: 360,
-              child: Container(
+              child: const DecoratedBox(
                 decoration: BoxDecoration(
                   gradient: AppGradients.overlay,
                 ),
@@ -354,7 +351,7 @@ class _SwipeCardState extends State<SwipeCard> with SingleTickerProviderStateMix
                         decoration: BoxDecoration(
                           color: index == _activePhotoIndex
                               ? context.colors.primary
-                              : Colors.white.withOpacity(0.3),
+                              : Colors.white.withValues(alpha: 0.3),
                           borderRadius: BorderRadius.circular(2),
                         ),
                       ),
@@ -420,7 +417,7 @@ class _SwipeCardState extends State<SwipeCard> with SingleTickerProviderStateMix
                         Text(
                           '${Formatter.formatDistance(widget.user.distance)} • ${widget.user.locationName}',
                           style: context.typography.caption.copyWith(
-                            color: context.colors.textPrimary.withOpacity(0.9),
+                            color: context.colors.textPrimary.withValues(alpha: 0.9),
                             shadows: AppShadows.textShadow,
                           ),
                         ),
@@ -447,7 +444,7 @@ class _SwipeCardState extends State<SwipeCard> with SingleTickerProviderStateMix
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: context.typography.body.copyWith(
-                          color: Colors.white.withOpacity(0.85),
+                          color: Colors.white.withValues(alpha: 0.85),
                           shadows: AppShadows.textShadow,
                           height: 1.35,
                         ),
@@ -464,8 +461,8 @@ class _SwipeCardState extends State<SwipeCard> with SingleTickerProviderStateMix
                           return GlassCard(
                             blurAmount: AppBlur.subtle,
                             borderRadius: AppRadius.borderSm,
-                            backgroundColor: Colors.white.withOpacity(0.12),
-                            border: Border.all(color: Colors.white.withOpacity(0.15), width: 0.5),
+                            backgroundColor: Colors.white.withValues(alpha: 0.12),
+                            border: Border.all(color: Colors.white.withValues(alpha: 0.15), width: 0.5),
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                             child: Text(
                               interest,

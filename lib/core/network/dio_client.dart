@@ -126,13 +126,10 @@ class _AuthInterceptor extends Interceptor {
   _AuthInterceptor({required this.dioClient});
 
   @override
-  void onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
-    // TODO: Retrieve actual JWT from local storage
-    const String? localJwtToken = 'mock_jwt_token_here';
-    
-    if (localJwtToken != null) {
-      options.headers['Authorization'] = 'Bearer $localJwtToken';
-    }
+  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
+    // In production, retrieve the actual JWT from local secure storage
+    const String localJwtToken = 'mock_jwt_token_here';
+    options.headers['Authorization'] = 'Bearer $localJwtToken';
     handler.next(options);
   }
 

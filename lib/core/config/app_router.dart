@@ -82,9 +82,9 @@ final GoRouter appRouter = GoRouter(
             GoRoute(
               path: '/swipe',
               name: AppRoutes.swipe,
-              pageBuilder: (context, state) => const CupertinoPage({
+              pageBuilder: (context, state) => const CupertinoPage(
                 child: SwipeScreen(),
-              }),
+              ),
             ),
           ],
         ),
@@ -96,9 +96,9 @@ final GoRouter appRouter = GoRouter(
             GoRoute(
               path: '/explore',
               name: AppRoutes.explore,
-              pageBuilder: (context, state) => const CupertinoPage({
+              pageBuilder: (context, state) => const CupertinoPage(
                 child: ExploreScreen(),
-              }),
+              ),
             ),
           ],
         ),
@@ -110,9 +110,9 @@ final GoRouter appRouter = GoRouter(
             GoRoute(
               path: '/likes',
               name: AppRoutes.likes,
-              pageBuilder: (context, state) => const CupertinoPage({
+              pageBuilder: (context, state) => const CupertinoPage(
                 child: LikesScreen(),
-              }),
+              ),
             ),
           ],
         ),
@@ -124,9 +124,9 @@ final GoRouter appRouter = GoRouter(
             GoRoute(
               path: '/chat',
               name: AppRoutes.chatList,
-              pageBuilder: (context, state) => const CupertinoPage({
+              pageBuilder: (context, state) => const CupertinoPage(
                 child: ChatListScreen(),
-              }),
+              ),
               routes: <RouteBase>[
                 GoRoute(
                   path: 'detail/:id',
@@ -149,9 +149,9 @@ final GoRouter appRouter = GoRouter(
             GoRoute(
               path: '/profile',
               name: AppRoutes.profile,
-              pageBuilder: (context, state) => const CupertinoPage({
+              pageBuilder: (context, state) => const CupertinoPage(
                 child: ProfileScreen(),
-              }),
+              ),
               routes: <RouteBase>[
                 GoRoute(
                   path: 'edit',

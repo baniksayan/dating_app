@@ -2,7 +2,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../core/extensions/build_context_ext.dart';
-import '../core/widgets/primary_button.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -37,7 +36,7 @@ class _SplashScreenState extends State<SplashScreen> {
             ),
             const SizedBox(height: 24),
             Text(
-              'A N T I G R A V I T Y',
+              'D A T I N G A P P',
               style: context.typography.headline.copyWith(
                 letterSpacing: 4.0,
                 color: context.colors.accent,
