@@ -15,6 +15,7 @@ class SwipeCard extends StatefulWidget {
   final VoidCallback onSwipeRight;
   final VoidCallback onSwipeUp;
   final ValueNotifier<SwipeDirection?>? triggerSwipeNotifier;
+  final ValueNotifier<Offset>? dragOffsetNotifier; // reports live drag to parent
   final bool isTopCard;
 
   const SwipeCard({
@@ -24,6 +25,7 @@ class SwipeCard extends StatefulWidget {
     required this.onSwipeRight,
     required this.onSwipeUp,
     this.triggerSwipeNotifier,
+    this.dragOffsetNotifier,
     this.isTopCard = false,
   });
 
@@ -121,6 +123,8 @@ class _SwipeCardState extends State<SwipeCard> with SingleTickerProviderStateMix
 
   void _animateFlyOut(Offset targetOffset, double targetRotation, VoidCallback onCompleted) {
     HapticFeedback.mediumImpact();
+    // Reset drag notifier immediately so buttons snap back
+    widget.dragOffsetNotifier?.value = Offset.zero;
     setState(() {
       _isDragging = false;
     });
@@ -141,6 +145,9 @@ class _SwipeCardState extends State<SwipeCard> with SingleTickerProviderStateMix
   }
 
   void _springBack() {
+    // Reset drag notifier so buttons snap back to idle
+    widget.dragOffsetNotifier?.value = Offset.zero;
+
     _translationAnim = Tween<Offset>(
       begin: Offset(_offsetX, _offsetY),
       end: Offset.zero,
@@ -171,7 +178,7 @@ class _SwipeCardState extends State<SwipeCard> with SingleTickerProviderStateMix
     return LayoutBuilder(
       builder: (context, constraints) {
         return GestureDetector(
-          onPanStart: widget.isTopCard && !_isExpandedCard
+           onPanStart: widget.isTopCard && !_isExpandedCard
                ? (details) {
                    setState(() {
                      _isDragging = true;
@@ -186,6 +193,8 @@ class _SwipeCardState extends State<SwipeCard> with SingleTickerProviderStateMix
                      _offsetX += details.delta.dx;
                      _offsetY += details.delta.dy;
                    });
+                   // Notify parent of live offset for reactive button animations
+                   widget.dragOffsetNotifier?.value = Offset(_offsetX, _offsetY);
                  }
                : null,
            onPanEnd: widget.isTopCard && !_isExpandedCard

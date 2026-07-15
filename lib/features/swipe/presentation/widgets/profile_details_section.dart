@@ -158,7 +158,30 @@ class ProfileDetailsSection extends StatelessWidget {
       itemBuilder: (context, index) {
         final key = basics.keys.elementAt(index);
         final val = basics.values.elementAt(index);
-        final icon = _getIconForKey(key);
+        
+        IconData icon = _getIconForKey(key);
+        Color iconColor = const Color(0xFF79A3C3); // Soft Classic Blue brand color
+
+        if (key == 'Relationship Goals') {
+          switch (val) {
+            case 'Long-term relationship':
+              icon = Icons.diamond_rounded;
+              iconColor = const Color(0xFFEF9A9A);
+              break;
+            case 'Life partner':
+              icon = Icons.diversity_3_rounded;
+              iconColor = const Color(0xFFF48FB1);
+              break;
+            case 'Open to short-term':
+              icon = Icons.local_cafe_rounded;
+              iconColor = const Color(0xFFFFCC80);
+              break;
+            case 'Figuring it out':
+              icon = Icons.explore_rounded;
+              iconColor = const Color(0xFF80CBC4);
+              break;
+          }
+        }
 
         return GlassCard(
           blurAmount: AppBlur.subtle,
@@ -170,7 +193,7 @@ class ProfileDetailsSection extends StatelessWidget {
             children: [
               Icon(
                 icon,
-                color: const Color(0xFF79A3C3), // Soft Classic Blue brand color
+                color: iconColor,
                 size: 16,
               ),
               const SizedBox(width: 8),

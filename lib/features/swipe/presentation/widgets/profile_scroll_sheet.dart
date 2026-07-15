@@ -34,7 +34,7 @@ class _ProfileScrollSheetState extends State<ProfileScrollSheet> {
       controller: widget.scrollController,
       physics: widget.isExpanded
           ? const BouncingScrollPhysics()
-          : const NeverScrollableScrollPhysics(), // Scrollable only when expanded
+          : const NeverScrollableScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(20, 24, 20, 80),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -45,7 +45,6 @@ class _ProfileScrollSheetState extends State<ProfileScrollSheet> {
 
           // 2. Bio Preview / Expanded Details
           if (!widget.isExpanded) ...[
-            // Collapsed state: Show 1-2 lines bio preview with ellipsis, and the button inline centered
             if (widget.user.bio.isNotEmpty)
               Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
@@ -58,7 +57,7 @@ class _ProfileScrollSheetState extends State<ProfileScrollSheet> {
                       style: context.typography.body.copyWith(
                         color: Colors.white.withValues(alpha: 0.7),
                         height: 1.4,
-                        fontSize: 13.5, // Slightly smaller font than the name
+                        fontSize: 13.5,
                       ),
                     ),
                   ),
@@ -70,7 +69,6 @@ class _ProfileScrollSheetState extends State<ProfileScrollSheet> {
                 ],
               ),
           ] else ...[
-            // Expanded state: Reveal Biography, Basics, Lifestyle, Interests, Additional Photos
             AnimatedProfileSection(
               index: 0,
               child: Column(
@@ -107,10 +105,38 @@ class _ProfileScrollSheetState extends State<ProfileScrollSheet> {
   }
 
   Widget _buildProfileHeader(BuildContext context) {
-    // Dynamically retrieve the exact same Relationship Goals tag formula
     final int hash = widget.user.id.hashCode;
-    final goals = ['Long-term relationship', 'Life partner', 'Open to short-term', 'Figuring it out'];
+    final goals = [
+      'Long-term relationship',
+      'Life partner',
+      'Open to short-term',
+      'Figuring it out',
+    ];
     final String relationshipGoal = goals[hash % goals.length];
+
+    IconData goalIcon;
+    Color goalColor;
+    switch (relationshipGoal) {
+      case 'Long-term relationship':
+        goalIcon = Icons.diamond_rounded;
+        goalColor = const Color(0xFFEF9A9A);
+        break;
+      case 'Life partner':
+        goalIcon = Icons.diversity_3_rounded;
+        goalColor = const Color(0xFFF48FB1);
+        break;
+      case 'Open to short-term':
+        goalIcon = Icons.local_cafe_rounded;
+        goalColor = const Color(0xFFFFCC80);
+        break;
+      case 'Figuring it out':
+        goalIcon = Icons.explore_rounded;
+        goalColor = const Color(0xFF80CBC4);
+        break;
+      default:
+        goalIcon = Icons.favorite_rounded;
+        goalColor = const Color(0xFF79A3C3);
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -130,7 +156,7 @@ class _ProfileScrollSheetState extends State<ProfileScrollSheet> {
                       style: context.typography.displayMedium.copyWith(
                         fontWeight: FontWeight.bold,
                         color: context.colors.textPrimary,
-                        fontSize: 25, // Optimized typography sizing
+                        fontSize: 25,
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -147,22 +173,19 @@ class _ProfileScrollSheetState extends State<ProfileScrollSheet> {
               ),
             ),
             const SizedBox(width: 8),
-            
+
             // Glassmorphic capsule for Relationship Goal on the right side
             GlassCard(
               blurAmount: AppBlur.subtle,
               borderRadius: BorderRadius.circular(12),
               backgroundColor: Colors.white.withValues(alpha: 0.08),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.12), width: 0.5),
+              border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.12), width: 0.5),
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(
-                    Icons.favorite_rounded,
-                    color: Color(0xFF79A3C3), // Soft Classic Blue brand color
-                    size: 11,
-                  ),
+                  Icon(goalIcon, color: goalColor, size: 11),
                   const SizedBox(width: 4),
                   Text(
                     relationshipGoal,
