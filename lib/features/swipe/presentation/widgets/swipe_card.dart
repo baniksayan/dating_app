@@ -17,6 +17,7 @@ class SwipeCard extends StatefulWidget {
   final ValueNotifier<SwipeDirection?>? triggerSwipeNotifier;
   final ValueNotifier<Offset>? dragOffsetNotifier; // reports live drag to parent
   final bool isTopCard;
+  final SwipeDirection? initialRewindDirection;
 
   const SwipeCard({
     super.key,
@@ -27,6 +28,7 @@ class SwipeCard extends StatefulWidget {
     this.triggerSwipeNotifier,
     this.dragOffsetNotifier,
     this.isTopCard = false,
+    this.initialRewindDirection,
   });
 
   @override
@@ -58,23 +60,46 @@ class _SwipeCardState extends State<SwipeCard> with SingleTickerProviderStateMix
   @override
   void initState() {
     super.initState();
+    if (widget.initialRewindDirection != null) {
+      switch (widget.initialRewindDirection!) {
+        case SwipeDirection.left:
+          _offsetX = -400.0;
+          _offsetY = 0.0;
+          break;
+        case SwipeDirection.right:
+          _offsetX = 400.0;
+          _offsetY = 0.0;
+          break;
+        case SwipeDirection.up:
+          _offsetX = 0.0;
+          _offsetY = -800.0;
+          break;
+      }
+    }
+
     _animController = AnimationController(
       vsync: this,
       duration: AppDurations.medium,
     );
 
     _translationAnim = Tween<Offset>(
-      begin: Offset.zero,
+      begin: Offset(_offsetX, _offsetY),
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _animController, curve: Curves.easeOutBack));
 
     _rotationAnim = Tween<double>(
-      begin: 0.0,
+      begin: _offsetX * _rotationFactor * (pi / 180),
       end: 0.0,
     ).animate(CurvedAnimation(parent: _animController, curve: Curves.easeOut));
 
     // Listen to external button triggers
     widget.triggerSwipeNotifier?.addListener(_handleExternalSwipeTrigger);
+
+    if (widget.initialRewindDirection != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _springBack();
+      });
+    }
   }
 
   @override

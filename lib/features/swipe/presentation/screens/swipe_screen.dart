@@ -41,6 +41,8 @@ class _SwipeScreenState extends ConsumerState<SwipeScreen> {
   bool _showBoostMiniPopup = false; // compact re-tap popup
   bool _showSuperLikeAnim = false;
   bool _superLikeTriggeredByButton = false;
+  String? _rewoundUserId;
+  String? _rewoundDirection; // 'like', 'dislike', 'superlike'
 
   // Convenience getter: deterministically get the current user's relationship goal label
   String get _boostRelationshipGoal {
@@ -358,6 +360,13 @@ class _SwipeScreenState extends ConsumerState<SwipeScreen> {
                       triggerSwipeNotifier: _swipeTriggerNotifier,
                       dragOffsetNotifier: isTop ? _dragOffsetNotifier : null,
                       isTopCard: isTop,
+                      initialRewindDirection: (isTop && user.id == _rewoundUserId && _rewoundDirection != null)
+                          ? (_rewoundDirection == 'like'
+                              ? SwipeDirection.right
+                              : _rewoundDirection == 'dislike'
+                                  ? SwipeDirection.left
+                                  : SwipeDirection.up)
+                          : null,
                     ),
                   ),
                 ),
@@ -407,7 +416,17 @@ class _SwipeScreenState extends ConsumerState<SwipeScreen> {
                   icon: AppIcons.rewind,
                   iconColor: context.colors.accent,
                   size: 46,
-                  onTap: viewModel.rewind,
+                  onTap: () {
+                    final lastUser = state.lastSwipedUser;
+                    final lastType = state.lastSwipeType;
+                    if (lastUser != null && lastType != null) {
+                      setState(() {
+                        _rewoundUserId = lastUser.id;
+                        _rewoundDirection = lastType;
+                      });
+                    }
+                    viewModel.rewind();
+                  },
                   semanticsLabel: 'Rewind last swipe',
                 ),
 
