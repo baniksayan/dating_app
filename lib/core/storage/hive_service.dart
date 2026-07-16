@@ -26,14 +26,14 @@ class HiveService {
   Future<void> init() async {
     try {
       await Hive.initFlutter();
-      
+
       _usersBox = await Hive.openBox(_usersBoxName);
       _likesBox = await Hive.openBox(_likesBoxName);
       _matchesBox = await Hive.openBox(_matchesBoxName);
       _settingsBox = await Hive.openBox(_settingsBoxName);
 
       Logger.info('Hive Initialized Successfully', 'HiveService');
-      
+
       // Seed dummy data if empty
       if (_usersBox.isEmpty) {
         await _seedMockData();
@@ -46,14 +46,15 @@ class HiveService {
   /// Seeds mock dating profiles into the Hive user box
   Future<void> _seedMockData() async {
     Logger.info('Seeding mock profiles into Hive...', 'HiveService');
-    
+
     final List<Map<String, dynamic>> mockProfiles = [
       {
         'id': 'user_1',
         'name': 'Aurelia',
         'age': 24,
         'gender': 'female',
-        'bio': 'Fine arts curator from Paris, currently in NY. Passionate about minimalism, architectural design, and espresso. Let’s explore a gallery together.',
+        'bio':
+            'Fine arts curator from Paris, currently in NY. Passionate about minimalism, architectural design, and espresso. Let’s explore a gallery together.',
         'photos': [
           'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=600',
           'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=600',
@@ -69,10 +70,11 @@ class HiveService {
       },
       {
         'id': 'user_2',
-        'name': 'Sebastian',
+        'name': 'Sebastian Banik',
         'age': 27,
         'gender': 'male',
-        'bio': 'Architectural designer. Seeking elegance in structure and depth in conversation. Usually sketching, traveling, or playing jazz piano.',
+        'bio':
+            'Architectural designer. Seeking elegance in structure and depth in conversation. Usually sketching, traveling, or playing jazz piano.',
         'photos': [
           'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=600',
           'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=600',
@@ -80,7 +82,13 @@ class HiveService {
         'distance': 3.4,
         'isVerified': true,
         'isPremium': false,
-        'interests': ['Sketching', 'Jazz Piano', 'Brutalism', 'Vinyl', 'Sailing'],
+        'interests': [
+          'Sketching',
+          'Jazz Piano',
+          'Brutalism',
+          'Vinyl',
+          'Sailing',
+        ],
         'jobTitle': 'Senior Architect',
         'company': 'Foster + Partners',
         'locationName': 'Brooklyn, New York',
@@ -90,7 +98,8 @@ class HiveService {
         'name': 'Isabella',
         'age': 26,
         'gender': 'female',
-        'bio': 'UX researcher by day, classical violinist by night. Let’s find harmony in code, design, and symphony.',
+        'bio':
+            'UX researcher by day, classical violinist by night. Let’s find harmony in code, design, and symphony.',
         'photos': [
           'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=600',
           'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&q=80&w=600',
@@ -98,7 +107,13 @@ class HiveService {
         'distance': 0.8,
         'isVerified': true,
         'isPremium': true,
-        'interests': ['Violin', 'Human Behavior', 'Indie Rock', 'Hike', 'Matcha'],
+        'interests': [
+          'Violin',
+          'Human Behavior',
+          'Indie Rock',
+          'Hike',
+          'Matcha',
+        ],
         'jobTitle': 'Staff UX Researcher',
         'company': 'Apple',
         'locationName': 'Greenwich Village, New York',
@@ -108,7 +123,8 @@ class HiveService {
         'name': 'Julian',
         'age': 29,
         'gender': 'male',
-        'bio': 'Software engineer and private pilot. Coding clean code on ground, flying single-engines in skies. Love deep house, road trips, and vinyl records.',
+        'bio':
+            'Software engineer and private pilot. Coding clean code on ground, flying single-engines in skies. Love deep house, road trips, and vinyl records.',
         'photos': [
           'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=600',
           'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&q=80&w=600',
@@ -116,7 +132,13 @@ class HiveService {
         'distance': 5.2,
         'isVerified': false,
         'isPremium': false,
-        'interests': ['Aviation', 'Deep House', 'Road Trips', 'Flutter', 'Fitness'],
+        'interests': [
+          'Aviation',
+          'Deep House',
+          'Road Trips',
+          'Flutter',
+          'Fitness',
+        ],
         'jobTitle': 'Architect Engineer',
         'company': 'Vercel',
         'locationName': 'Chelsea, New York',
@@ -126,7 +148,8 @@ class HiveService {
         'name': 'Seraphina',
         'age': 25,
         'gender': 'female',
-        'bio': 'Creating tactile poetry through fabrics. Fashion designer inspired by vintage aesthetics, film photography, and rainy Sunday afternoons.',
+        'bio':
+            'Creating tactile poetry through fabrics. Fashion designer inspired by vintage aesthetics, film photography, and rainy Sunday afternoons.',
         'photos': [
           'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=600',
           'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&q=80&w=600',
@@ -134,18 +157,27 @@ class HiveService {
         'distance': 2.1,
         'isVerified': true,
         'isPremium': true,
-        'interests': ['Fashion', 'Film Photography', 'Thrifting', 'Vinyl', 'Tea Tasting'],
+        'interests': [
+          'Fashion',
+          'Film Photography',
+          'Thrifting',
+          'Vinyl',
+          'Tea Tasting',
+        ],
         'jobTitle': 'Lead Designer',
         'company': 'Self-Employed',
         'locationName': 'SoHo, New York',
-      }
+      },
     ];
 
     for (final profile in mockProfiles) {
       await _usersBox.put(profile['id'], jsonEncode(profile));
     }
-    
-    Logger.info('Successfully seeded ${_usersBox.length} mock profiles', 'HiveService');
+
+    Logger.info(
+      'Successfully seeded ${_usersBox.length} mock profiles',
+      'HiveService',
+    );
   }
 
   /// Reset Hive databases for testing or user logging out

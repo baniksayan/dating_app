@@ -14,6 +14,25 @@ class UserModel {
   final String locationName;
   final DateTime? createdAt;
 
+  String get displayName {
+    final parts = name.trim().split(RegExp(r'\s+'));
+    if (parts.isEmpty) return name;
+    if (parts.length == 2) {
+      final first = parts[0];
+      final last = parts[1];
+      if (last.isNotEmpty) {
+        return '$first ${last[0].toUpperCase()}';
+      }
+    } else if (parts.length >= 3) {
+      final first = parts[0];
+      final last = parts[parts.length - 1];
+      if (last.isNotEmpty) {
+        return '$first ${last[0].toUpperCase()}..';
+      }
+    }
+    return name;
+  }
+
   const UserModel({
     required this.id,
     required this.name,

@@ -589,9 +589,9 @@ class _MatchOverlayWidgetState extends State<_MatchOverlayWidget>
 
   @override
   Widget build(BuildContext context) {
-    return FadeTransition(
-      opacity: _fadeAnimation,
-      child: Positioned.fill(
+    return Positioned.fill(
+      child: FadeTransition(
+        opacity: _fadeAnimation,
         child: GlassCard(
           blurAmount: AppBlur.heavy,
           backgroundColor: Colors.black.withValues(alpha: 0.85),
@@ -615,7 +615,7 @@ class _MatchOverlayWidgetState extends State<_MatchOverlayWidget>
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'You and ${widget.matchedUser.name} liked each other.',
+                        'You and ${widget.matchedUser.displayName} liked each other.',
                         style: context.typography.body.copyWith(
                           color: context.colors.textSecondary,
                         ),

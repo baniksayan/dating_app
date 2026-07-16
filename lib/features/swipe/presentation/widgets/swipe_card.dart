@@ -1,6 +1,6 @@
 import 'dart:math';
 import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import '../../../../core/extensions/build_context_ext.dart';
 import '../../../../core/theme/app_design_system.dart';
 import '../../../../core/models/user_model.dart';
@@ -272,6 +272,9 @@ class _SwipeCardState extends State<SwipeCard> with SingleTickerProviderStateMix
               },
             ),
 
+            // Radial Ink Splash Overlay
+            _buildInkOverlay(),
+
             // Swiping Status Stamps (LIKE / NOPE / SUPER)
             if (widget.isTopCard) ...[
               _buildLikeStamp(),
@@ -279,6 +282,61 @@ class _SwipeCardState extends State<SwipeCard> with SingleTickerProviderStateMix
               _buildSuperStamp(),
             ],
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInkOverlay() {
+    if (!widget.isTopCard) return const SizedBox.shrink();
+
+    double currentX = _offsetX;
+    double currentY = _offsetY;
+
+    if (!_isDragging && _animController.isAnimating) {
+      currentX = _translationAnim.value.dx;
+      currentY = _translationAnim.value.dy;
+    }
+
+    // Determine direction and progress
+    double progress = 0.0;
+    Color color = Colors.transparent;
+
+    if (currentX > 10) {
+      // Dragging/Flying Right (Like)
+      progress = (currentX / _swipeThreshold).clamp(0.0, 1.5);
+      color = context.colors.swipeLike;
+    } else if (currentX < -10) {
+      // Dragging/Flying Left (Dislike)
+      progress = (-currentX / _swipeThreshold).clamp(0.0, 1.5);
+      color = context.colors.swipeDislike;
+    } else if (currentY < -10 && currentY.abs() > currentX.abs()) {
+      // Dragging/Flying Up (Super Like)
+      progress = (-currentY / _swipeThreshold).clamp(0.0, 1.5);
+      color = context.colors.swipeSuperLike;
+    }
+
+    if (progress <= 0.05) return const SizedBox.shrink();
+
+    // Ink splash grows in radius and opacity as progress increases
+    final double radius = progress * 1.4;
+    final double opacity = (progress * 0.45).clamp(0.0, 0.5);
+
+    return Positioned.fill(
+      child: IgnorePointer(
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: RadialGradient(
+              center: Alignment.center,
+              radius: radius,
+              colors: [
+                color.withValues(alpha: opacity),
+                color.withValues(alpha: opacity * 0.4),
+                Colors.transparent,
+              ],
+              stops: const [0.0, 0.5, 1.0],
+            ),
+          ),
         ),
       ),
     );

@@ -152,7 +152,7 @@ class _ProfileScrollSheetState extends State<ProfileScrollSheet> {
                 children: [
                   Flexible(
                     child: Text(
-                      '${widget.user.name}, ${widget.user.age}',
+                      '${widget.user.displayName}, ${widget.user.age}',
                       style: context.typography.displayMedium.copyWith(
                         fontWeight: FontWeight.bold,
                         color: context.colors.textPrimary,
@@ -218,16 +218,16 @@ class _ProfileScrollSheetState extends State<ProfileScrollSheet> {
         // Location & Distance Info
         Row(
           children: [
-            Icon(
+            const Icon(
               AppIcons.location,
               size: 14,
-              color: context.colors.textSecondary,
+              color: Colors.white,
             ),
             const SizedBox(width: 4),
             Text(
               '${widget.user.locationName} • ${widget.user.distance.toStringAsFixed(1)} miles away',
               style: context.typography.caption.copyWith(
-                color: context.colors.textSecondary,
+                color: Colors.white,
                 fontSize: 12,
               ),
             ),

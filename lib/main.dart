@@ -13,11 +13,7 @@ void main() async {
   // Initialize Local Hive Service (seeds dummy data if empty)
   await HiveService.instance.init();
 
-  runApp(
-    const ProviderScope(
-      child: DatingAppApp(),
-    ),
-  );
+  runApp(const ProviderScope(child: DatingAppApp()));
 }
 
 class DatingAppApp extends StatelessWidget {
@@ -26,14 +22,14 @@ class DatingAppApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Logger.info('Launching Premium DatingApp App...', 'Main');
-    
+
     return MaterialApp.router(
       title: 'DatingApp Premium',
       debugShowCheckedModeBanner: false,
-      
+
       // Setup GoRouter
       routerConfig: appRouter,
-      
+
       // Global Theme Definition using the Semantic Color Palette
       themeMode: ThemeMode.dark, // Deep dark luxury mode
       darkTheme: ThemeData(
@@ -42,7 +38,7 @@ class DatingAppApp extends StatelessWidget {
         scaffoldBackgroundColor: AppColors.background,
         cardColor: AppColors.card,
         dividerColor: AppColors.divider,
-        
+
         // Define Custom Color Scheme based on AppColors
         colorScheme: const ColorScheme.dark(
           primary: AppColors.primary,
@@ -56,7 +52,7 @@ class DatingAppApp extends StatelessWidget {
           backgroundColor: AppColors.background,
           elevation: 0,
         ),
-        
+
         // Cupertino text selection theme matching iOS
         cupertinoOverrideTheme: const CupertinoThemeData(
           primaryColor: AppColors.primary,
