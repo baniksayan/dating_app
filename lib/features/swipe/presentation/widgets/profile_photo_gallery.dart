@@ -99,6 +99,26 @@ class _ProfilePhotoGalleryState extends State<ProfilePhotoGallery> {
               ),
             ),
 
+            // 3.5. Bottom Gradient Shadow (ensures high contrast for text)
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: constraints.maxHeight * 0.45,
+              child: const DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.transparent,
+                      Color(0xD9000000), // Rich dark black fade at the bottom
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
             // 4. Photo Indicators (Dashes like Instagram Stories)
             if (widget.photos.length > 1)
               Positioned(

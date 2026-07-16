@@ -26,16 +26,19 @@ class SwipeScreen extends ConsumerStatefulWidget {
 
 class _SwipeScreenState extends ConsumerState<SwipeScreen> {
   // ValueNotifier to trigger fly-out animations from screen buttons
-  final ValueNotifier<SwipeDirection?> _swipeTriggerNotifier = ValueNotifier<SwipeDirection?>(null);
+  final ValueNotifier<SwipeDirection?> _swipeTriggerNotifier =
+      ValueNotifier<SwipeDirection?>(null);
   // Tracks live card drag offset — drives reactive button bubble animations
-  final ValueNotifier<Offset> _dragOffsetNotifier = ValueNotifier<Offset>(Offset.zero);
+  final ValueNotifier<Offset> _dragOffsetNotifier = ValueNotifier<Offset>(
+    Offset.zero,
+  );
 
   // Boost and Super Like state variables
   bool _isBoosting = false;
   int _boostSecondsRemaining = 0;
   Timer? _boostTimer;
   bool _showBoostOverlay = false;
-  bool _showBoostMiniPopup = false;   // compact re-tap popup
+  bool _showBoostMiniPopup = false; // compact re-tap popup
   bool _showSuperLikeAnim = false;
   bool _superLikeTriggeredByButton = false;
 
@@ -44,7 +47,12 @@ class _SwipeScreenState extends ConsumerState<SwipeScreen> {
     final state = ref.read(swipeViewModelProvider);
     if (state.profiles.isEmpty) return 'your ideal match';
     final user = state.profiles.first;
-    final goals = ['Long-term relationship', 'Life partner', 'Open to short-term', 'Figuring it out'];
+    final goals = [
+      'Long-term relationship',
+      'Life partner',
+      'Open to short-term',
+      'Figuring it out',
+    ];
     return goals[user.id.hashCode % goals.length];
   }
 
@@ -123,14 +131,17 @@ class _SwipeScreenState extends ConsumerState<SwipeScreen> {
             child: Column(
               children: [
                 // Top Custom Navigation Bar - Paint Isolated
-                RepaintBoundary(
-                  child: _buildTopBar(context),
-                ),
-                
+                RepaintBoundary(child: _buildTopBar(context)),
+
                 // Active Swipe Deck
                 Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 100), // Leave room for floating bottom tab bar
+                    padding: const EdgeInsets.fromLTRB(
+                      16,
+                      8,
+                      16,
+                      100,
+                    ), // Leave room for floating bottom tab bar
                     child: _buildSwipeDeck(context, swipeState, viewModel),
                   ),
                 ),
@@ -202,7 +213,9 @@ class _SwipeScreenState extends ConsumerState<SwipeScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  border: Border.all(color: context.colors.accent.withValues(alpha: 0.5)),
+                  border: Border.all(
+                    color: context.colors.accent.withValues(alpha: 0.5),
+                  ),
                   borderRadius: context.radius.borderPill,
                 ),
                 child: Text(
@@ -217,39 +230,37 @@ class _SwipeScreenState extends ConsumerState<SwipeScreen> {
               ),
               if (_isBoosting) ...[
                 const SizedBox(width: 8),
-                GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _showBoostOverlay = true;
-                    });
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: Colors.amber.withValues(alpha: 0.15),
-                      border: Border.all(color: Colors.amber.withValues(alpha: 0.4)),
-                      borderRadius: context.radius.borderPill,
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.withValues(alpha: 0.15),
+                    border: Border.all(
+                      color: Colors.amber.withValues(alpha: 0.4),
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          Icons.bolt_rounded,
+                    borderRadius: context.radius.borderPill,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.bolt_rounded,
+                        color: Colors.amber,
+                        size: 10,
+                      ),
+                      const SizedBox(width: 3),
+                      Text(
+                        _formatTime(_boostSecondsRemaining),
+                        style: context.typography.caption.copyWith(
                           color: Colors.amber,
-                          size: 10,
+                          fontSize: 8.5,
+                          fontWeight: FontWeight.w700,
+                          fontFeatures: const [FontFeature.tabularFigures()],
                         ),
-                        const SizedBox(width: 3),
-                        Text(
-                          _formatTime(_boostSecondsRemaining),
-                          style: context.typography.caption.copyWith(
-                            color: Colors.amber,
-                            fontSize: 8.5,
-                            fontWeight: FontWeight.w700,
-                            fontFeatures: const [FontFeature.tabularFigures()],
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -281,7 +292,11 @@ class _SwipeScreenState extends ConsumerState<SwipeScreen> {
     );
   }
 
-  Widget _buildSwipeDeck(BuildContext context, SwipeState state, SwipeViewModel viewModel) {
+  Widget _buildSwipeDeck(
+    BuildContext context,
+    SwipeState state,
+    SwipeViewModel viewModel,
+  ) {
     if (state.isLoading) {
       return Center(
         child: Container(
@@ -354,14 +369,16 @@ class _SwipeScreenState extends ConsumerState<SwipeScreen> {
         const SizedBox(height: 20),
 
         // Floating Action Controls Row - Paint Isolated
-        RepaintBoundary(
-          child: _buildActionRow(context, state, viewModel),
-        ),
+        RepaintBoundary(child: _buildActionRow(context, state, viewModel)),
       ],
     );
   }
 
-  Widget _buildActionRow(BuildContext context, SwipeState state, SwipeViewModel viewModel) {
+  Widget _buildActionRow(
+    BuildContext context,
+    SwipeState state,
+    SwipeViewModel viewModel,
+  ) {
     final bool canRewind = state.lastSwipedUser != null;
     const double swipeThreshold = 120.0; // mirrors SwipeCard._swipeThreshold
 
@@ -371,9 +388,15 @@ class _SwipeScreenState extends ConsumerState<SwipeScreen> {
         valueListenable: _dragOffsetNotifier,
         builder: (context, dragOffset, _) {
           // Progress 0→1 for each axis
-          final double rightP = (dragOffset.dx / swipeThreshold).clamp(0.0, 1.0);
-          final double leftP  = (-dragOffset.dx / swipeThreshold).clamp(0.0, 1.0);
-          final double upP    = (-dragOffset.dy / swipeThreshold).clamp(0.0, 1.0);
+          final double rightP = (dragOffset.dx / swipeThreshold).clamp(
+            0.0,
+            1.0,
+          );
+          final double leftP = (-dragOffset.dx / swipeThreshold).clamp(
+            0.0,
+            1.0,
+          );
+          final double upP = (-dragOffset.dy / swipeThreshold).clamp(0.0, 1.0);
 
           return Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -465,10 +488,7 @@ class _SwipeScreenState extends ConsumerState<SwipeScreen> {
               color: context.colors.textSecondary,
             ),
             const SizedBox(height: 16),
-            Text(
-              'No Profiles Nearby',
-              style: context.typography.title,
-            ),
+            Text('No Profiles Nearby', style: context.typography.title),
             const SizedBox(height: 8),
             Text(
               'You have swiped on all users in your area. Try expanding your filters or reset the deck below.',
@@ -532,25 +552,27 @@ class _MatchOverlayWidgetState extends State<_MatchOverlayWidget>
       ),
     );
 
-    _leftAvatarSlide = Tween<Offset>(
-      begin: const Offset(-2.0, 0.0),
-      end: const Offset(0.12, 0.0), // Interlock overlap position
-    ).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0.3, 0.9, curve: Curves.easeOutBack),
-      ),
-    );
+    _leftAvatarSlide =
+        Tween<Offset>(
+          begin: const Offset(-2.0, 0.0),
+          end: const Offset(0.12, 0.0), // Interlock overlap position
+        ).animate(
+          CurvedAnimation(
+            parent: _controller,
+            curve: const Interval(0.3, 0.9, curve: Curves.easeOutBack),
+          ),
+        );
 
-    _rightAvatarSlide = Tween<Offset>(
-      begin: const Offset(2.0, 0.0),
-      end: const Offset(-0.12, 0.0), // Interlock overlap position
-    ).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0.3, 0.9, curve: Curves.easeOutBack),
-      ),
-    );
+    _rightAvatarSlide =
+        Tween<Offset>(
+          begin: const Offset(2.0, 0.0),
+          end: const Offset(-0.12, 0.0), // Interlock overlap position
+        ).animate(
+          CurvedAnimation(
+            parent: _controller,
+            curve: const Interval(0.3, 0.9, curve: Curves.easeOutBack),
+          ),
+        );
 
     _controller.forward();
     HapticFeedback.lightImpact();
@@ -615,7 +637,8 @@ class _MatchOverlayWidgetState extends State<_MatchOverlayWidget>
                           boxShadow: AppShadows.cardFloating,
                         ),
                         child: const ProfileAvatar(
-                          imageUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=400',
+                          imageUrl:
+                              'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=400',
                           radius: 64,
                           isVerified: true,
                           isPremium: true,
@@ -632,7 +655,9 @@ class _MatchOverlayWidgetState extends State<_MatchOverlayWidget>
                           boxShadow: AppShadows.cardFloating,
                         ),
                         child: ProfileAvatar(
-                          imageUrl: widget.matchedUser.photos.isNotEmpty ? widget.matchedUser.photos.first : '',
+                          imageUrl: widget.matchedUser.photos.isNotEmpty
+                              ? widget.matchedUser.photos.first
+                              : '',
                           radius: 64,
                           isVerified: widget.matchedUser.isVerified,
                           isPremium: widget.matchedUser.isPremium,
@@ -664,7 +689,9 @@ class _MatchOverlayWidgetState extends State<_MatchOverlayWidget>
                         const SizedBox(height: 16),
                         SecondaryButton(
                           text: 'Keep Swiping',
-                          borderColor: context.colors.accent.withValues(alpha: 0.5),
+                          borderColor: context.colors.accent.withValues(
+                            alpha: 0.5,
+                          ),
                           textColor: context.colors.accent,
                           onTap: widget.viewModel.dismissMatch,
                         ),
@@ -699,7 +726,10 @@ class _SuperLikeOverlayState extends State<_SuperLikeOverlay>
   void initState() {
     super.initState();
     HapticFeedback.heavyImpact(); // Double Cupertino vibe impact
-    Future.delayed(const Duration(milliseconds: 150), () => HapticFeedback.mediumImpact());
+    Future.delayed(
+      const Duration(milliseconds: 150),
+      () => HapticFeedback.mediumImpact(),
+    );
 
     _controller = AnimationController(
       vsync: this,
@@ -707,14 +737,33 @@ class _SuperLikeOverlayState extends State<_SuperLikeOverlay>
     );
 
     _scaleAnimation = TweenSequence<double>([
-      TweenSequenceItem(tween: Tween<double>(begin: 0.0, end: 1.2).chain(CurveTween(curve: Curves.easeOutBack)), weight: 40),
-      TweenSequenceItem(tween: Tween<double>(begin: 1.2, end: 1.0).chain(CurveTween(curve: Curves.easeInOut)), weight: 20),
-      TweenSequenceItem(tween: Tween<double>(begin: 1.0, end: 0.0).chain(CurveTween(curve: Curves.easeInBack)), weight: 40),
+      TweenSequenceItem(
+        tween: Tween<double>(
+          begin: 0.0,
+          end: 1.2,
+        ).chain(CurveTween(curve: Curves.easeOutBack)),
+        weight: 40,
+      ),
+      TweenSequenceItem(
+        tween: Tween<double>(
+          begin: 1.2,
+          end: 1.0,
+        ).chain(CurveTween(curve: Curves.easeInOut)),
+        weight: 20,
+      ),
+      TweenSequenceItem(
+        tween: Tween<double>(
+          begin: 1.0,
+          end: 0.0,
+        ).chain(CurveTween(curve: Curves.easeInBack)),
+        weight: 40,
+      ),
     ]).animate(_controller);
 
-    _rotationAnimation = Tween<double>(begin: 0.0, end: 2 * pi).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
-    );
+    _rotationAnimation = Tween<double>(
+      begin: 0.0,
+      end: 2 * pi,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
 
     _controller.forward().then((_) {
       widget.onFinished();
@@ -735,7 +784,10 @@ class _SuperLikeOverlayState extends State<_SuperLikeOverlay>
         builder: (context, child) {
           final progress = _controller.value;
           return BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: progress * 15, sigmaY: progress * 15),
+            filter: ImageFilter.blur(
+              sigmaX: progress * 15,
+              sigmaY: progress * 15,
+            ),
             child: Container(
               color: Colors.black.withValues(alpha: progress * 0.45),
               child: Center(
@@ -751,7 +803,9 @@ class _SuperLikeOverlayState extends State<_SuperLikeOverlay>
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFF4A90E2).withValues(alpha: 0.5),
+                                color: const Color(
+                                  0xFF4A90E2,
+                                ).withValues(alpha: 0.5),
                                 blurRadius: 30,
                                 spreadRadius: 10,
                               ),
@@ -797,10 +851,7 @@ class _BoostOverlay extends StatefulWidget {
   final VoidCallback onClose;
   final int secondsRemaining;
 
-  const _BoostOverlay({
-    required this.onClose,
-    required this.secondsRemaining,
-  });
+  const _BoostOverlay({required this.onClose, required this.secondsRemaining});
 
   @override
   State<_BoostOverlay> createState() => _BoostOverlayState();
@@ -816,19 +867,21 @@ class _BoostOverlayState extends State<_BoostOverlay>
   void initState() {
     super.initState();
     HapticFeedback.vibrate(); // Thunderstorm vibration start!
-    
+
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2000),
     )..repeat(reverse: true);
 
-    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.15).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _pulseAnimation = Tween<double>(
+      begin: 1.0,
+      end: 1.15,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
 
-    _rotationAnimation = Tween<double>(begin: -0.05, end: 0.05).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _rotationAnimation = Tween<double>(
+      begin: -0.05,
+      end: 0.05,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -847,7 +900,10 @@ class _BoostOverlayState extends State<_BoostOverlay>
   Widget build(BuildContext context) {
     return Positioned.fill(
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 18.0, sigmaY: 18.0), // iOS 26 live blur
+        filter: ImageFilter.blur(
+          sigmaX: 18.0,
+          sigmaY: 18.0,
+        ), // iOS 26 live blur
         child: Container(
           color: Colors.black.withValues(alpha: 0.65), // Liquid glass tint
           child: Center(
@@ -857,7 +913,10 @@ class _BoostOverlayState extends State<_BoostOverlay>
                 blurAmount: AppBlur.medium,
                 borderRadius: BorderRadius.circular(28),
                 backgroundColor: Colors.white.withValues(alpha: 0.05),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.12), width: 0.8),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.12),
+                  width: 0.8,
+                ),
                 padding: const EdgeInsets.all(28),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -910,7 +969,8 @@ class _BoostOverlayState extends State<_BoostOverlay>
                       style: context.typography.displayLarge.copyWith(
                         color: Colors.white,
                         fontSize: 48,
-                        fontWeight: FontWeight.w200, // Thin modern stopwatch typography
+                        fontWeight:
+                            FontWeight.w200, // Thin modern stopwatch typography
                         fontFeatures: const [FontFeature.tabularFigures()],
                       ),
                     ),
@@ -1029,7 +1089,9 @@ class _BoostMiniPopupState extends State<_BoostMiniPopup>
   void initState() {
     super.initState();
     _ctrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 320));
+      vsync: this,
+      duration: const Duration(milliseconds: 320),
+    );
     _scale = CurvedAnimation(parent: _ctrl, curve: Curves.easeOutBack);
     _opacity = CurvedAnimation(parent: _ctrl, curve: Curves.easeOut);
     _ctrl.forward();
@@ -1064,13 +1126,16 @@ class _BoostMiniPopupState extends State<_BoostMiniPopup>
                     child: Container(
                       margin: const EdgeInsets.symmetric(horizontal: 40),
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 24, vertical: 22),
+                        horizontal: 24,
+                        vertical: 22,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.07),
                         borderRadius: BorderRadius.circular(24),
                         border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.14),
-                            width: 0.8),
+                          color: Colors.white.withValues(alpha: 0.14),
+                          width: 0.8,
+                        ),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.amber.withValues(alpha: 0.15),
@@ -1086,8 +1151,11 @@ class _BoostMiniPopupState extends State<_BoostMiniPopup>
                           Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.bolt_rounded,
-                                  color: Colors.amber, size: 22),
+                              const Icon(
+                                Icons.bolt_rounded,
+                                color: Colors.amber,
+                                size: 22,
+                              ),
                               const SizedBox(width: 6),
                               Text(
                                 _fmt(widget.secondsRemaining),
@@ -1096,7 +1164,7 @@ class _BoostMiniPopupState extends State<_BoostMiniPopup>
                                   fontSize: 22,
                                   fontWeight: FontWeight.w700,
                                   fontFeatures: const [
-                                    FontFeature.tabularFigures()
+                                    FontFeature.tabularFigures(),
                                   ],
                                 ),
                               ),
@@ -1127,14 +1195,16 @@ class _BoostMiniPopupState extends State<_BoostMiniPopup>
                             onTap: widget.onClose,
                             child: Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 20, vertical: 8),
+                                horizontal: 20,
+                                vertical: 8,
+                              ),
                               decoration: BoxDecoration(
                                 color: Colors.white.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                    color:
-                                        Colors.white.withValues(alpha: 0.15),
-                                    width: 0.5),
+                                  color: Colors.white.withValues(alpha: 0.15),
+                                  width: 0.5,
+                                ),
                               ),
                               child: Text(
                                 'Got it',
@@ -1197,9 +1267,10 @@ class _ReactiveSwipeButtonState extends State<_ReactiveSwipeButton>
       vsync: this,
       duration: const Duration(milliseconds: 500),
     );
-    _pulseAnim = Tween<double>(begin: 1.0, end: 1.12).animate(
-      CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut),
-    );
+    _pulseAnim = Tween<double>(
+      begin: 1.0,
+      end: 1.12,
+    ).animate(CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut));
   }
 
   @override
@@ -1230,18 +1301,10 @@ class _ReactiveSwipeButtonState extends State<_ReactiveSwipeButton>
     final double scale = 1.0 + (p * 0.18);
 
     // Background fill: card color → activeColor
-    final Color bg = Color.lerp(
-      context.colors.card,
-      widget.activeColor,
-      p,
-    )!;
+    final Color bg = Color.lerp(context.colors.card, widget.activeColor, p)!;
 
     // Icon color: icon color → white
-    final Color iconCol = Color.lerp(
-      widget.activeColor,
-      Colors.white,
-      p,
-    )!;
+    final Color iconCol = Color.lerp(widget.activeColor, Colors.white, p)!;
 
     // Glow spread radius grows with progress
     final double glowBlur = p * 22.0;
@@ -1265,10 +1328,7 @@ class _ReactiveSwipeButtonState extends State<_ReactiveSwipeButton>
             animation: _pulseAnim,
             builder: (context, child) {
               final double pulse = active ? _pulseAnim.value : 1.0;
-              return Transform.scale(
-                scale: scale * pulse,
-                child: child,
-              );
+              return Transform.scale(scale: scale * pulse, child: child);
             },
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 80),

@@ -139,9 +139,9 @@ class _ProfileTransitionContainerState extends State<ProfileTransitionContainer>
                       },
                       blendMode: BlendMode.dstIn,
                       child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 20.0, sigmaY: 20.0),
+                        filter: ImageFilter.blur(sigmaX: 30.0, sigmaY: 30.0),
                         child: Container(
-                          color: Colors.black.withValues(alpha: 0.22 + (0.38 * value)),
+                          color: Colors.black.withValues(alpha: 0.45 + (0.35 * value)),
                         ),
                       ),
                     ),

@@ -56,7 +56,9 @@ class _FloatingExpandButtonState extends State<FloatingExpandButton>
   Widget build(BuildContext context) {
     return Semantics(
       button: true,
-      label: widget.isExpanded ? 'Collapse profile details' : 'Expand profile details',
+      label: widget.isExpanded
+          ? 'Collapse profile details'
+          : 'Expand profile details',
       child: GestureDetector(
         onTapDown: _handleTapDown,
         onTapUp: _handleTapUp,
@@ -70,22 +72,20 @@ class _FloatingExpandButtonState extends State<FloatingExpandButton>
           scale: _scaleAnimation,
           child: SizedBox(
             width: 52,
-            height: 52, // Large touch target (iOS HIG compliant accessibility area)
+            height:
+                52, // Large touch target (iOS HIG compliant accessibility area)
             child: Center(
               child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 200),
                 transitionBuilder: (child, animation) {
                   return ScaleTransition(
                     scale: animation,
-                    child: FadeTransition(
-                      opacity: animation,
-                      child: child,
-                    ),
+                    child: FadeTransition(opacity: animation, child: child),
                   );
                 },
                 child: Icon(
-                  widget.isExpanded 
-                      ? Icons.arrow_circle_down_rounded 
+                  widget.isExpanded
+                      ? Icons.arrow_circle_down_rounded
                       : Icons.arrow_circle_up_rounded,
                   key: ValueKey<bool>(widget.isExpanded),
                   color: Colors.white.withValues(alpha: 0.8),
