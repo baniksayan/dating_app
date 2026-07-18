@@ -59,6 +59,11 @@ class FakeSwipeRepository implements SwipeRepository {
 
   @override
   Future<void> undoSwipe(String userId) async {}
+
+  @override
+  Future<List<UserModel>> fetchMockProfiles() async {
+    return [];
+  }
 }
 void main() {
   group('SwipeViewModel Unit Tests', () {

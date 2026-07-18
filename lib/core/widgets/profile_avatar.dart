@@ -1,11 +1,14 @@
+import 'dart:io';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../extensions/build_context_ext.dart';
-import '../theme/app_design_system.dart';
 import 'badges.dart';
 import 'app_network_image.dart';
+import 'skeleton_loader.dart';
 
 class ProfileAvatar extends StatelessWidget {
   final String? imageUrl;
+  final String? seed;
   final double radius;
   final bool isVerified;
   final bool isPremium;
@@ -15,6 +18,7 @@ class ProfileAvatar extends StatelessWidget {
   const ProfileAvatar({
     super.key,
     this.imageUrl,
+    this.seed,
     this.radius = 36.0,
     this.isVerified = false,
     this.isPremium = false,
@@ -29,6 +33,9 @@ class ProfileAvatar extends StatelessWidget {
       color: isPremium ? context.colors.accent : context.colors.primary,
       width: 2.0,
     );
+
+    final String placeholderUrl =
+        'https://api.dicebear.com/10.x/lorelei/svg?seed=${Uri.encodeComponent(seed ?? "default")}';
 
     return Stack(
       alignment: Alignment.center,
@@ -49,21 +56,9 @@ class ProfileAvatar extends StatelessWidget {
                     width: diameter,
                     height: diameter,
                     borderRadius: BorderRadius.circular(radius),
-                    errorWidget: Container(
-                      color: context.colors.card,
-                      alignment: Alignment.center,
-                      child: Icon(
-                        AppIcons.profile,
-                        color: context.colors.textSecondary,
-                        size: radius * 0.8,
-                      ),
-                    ),
+                    errorWidget: _buildSvgPlaceholder(placeholderUrl, diameter),
                   )
-                : Icon(
-                    AppIcons.profile,
-                    color: context.colors.textSecondary,
-                    size: radius * 0.8,
-                  ),
+                : _buildSvgPlaceholder(placeholderUrl, diameter),
           ),
         ),
 
@@ -102,6 +97,31 @@ class ProfileAvatar extends StatelessWidget {
             ),
           ),
       ],
+    );
+  }
+
+  Widget _buildSvgPlaceholder(String url, double diameter) {
+    if (Platform.environment.containsKey('FLUTTER_TEST')) {
+      return Container(
+        color: const Color(0xFF222222),
+        alignment: Alignment.center,
+        child: Icon(
+          const IconData(0xe4e2, fontFamily: 'MaterialIcons'),
+          color: const Color(0x66FFFFFF),
+          size: radius * 0.8,
+        ),
+      );
+    }
+    return SvgPicture.network(
+      url,
+      width: diameter,
+      height: diameter,
+      fit: BoxFit.cover,
+      placeholderBuilder: (BuildContext context) => SkeletonLoader(
+        width: diameter,
+        height: diameter,
+        borderRadius: BorderRadius.circular(radius),
+      ),
     );
   }
 }

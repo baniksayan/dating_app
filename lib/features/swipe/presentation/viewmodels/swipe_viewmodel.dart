@@ -55,8 +55,12 @@ class SwipeViewModel extends StateNotifier<SwipeState> {
   Future<void> loadProfiles() async {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
-      final profiles = await _repository.getSwipeProfiles();
-      state = state.copyWith(profiles: profiles, isLoading: false);
+      final mockProfiles = await _repository.fetchMockProfiles();
+      final localProfiles = await _repository.getSwipeProfiles();
+      state = state.copyWith(
+        profiles: [...mockProfiles, ...localProfiles],
+        isLoading: false,
+      );
     } catch (e) {
       Logger.error('Failed to load swipe profiles in ViewModel', e, null, 'SwipeViewModel');
       state = state.copyWith(
@@ -167,8 +171,12 @@ class SwipeViewModel extends StateNotifier<SwipeState> {
     state = state.copyWith(isLoading: true, clearLastSwipe: true, clearMatch: true);
     try {
       await _repository.resetSwipeHistory();
-      final profiles = await _repository.getSwipeProfiles();
-      state = state.copyWith(profiles: profiles, isLoading: false);
+      final mockProfiles = await _repository.fetchMockProfiles();
+      final localProfiles = await _repository.getSwipeProfiles();
+      state = state.copyWith(
+        profiles: [...mockProfiles, ...localProfiles],
+        isLoading: false,
+      );
     } catch (e) {
       Logger.error('Error resetting deck', e, null, 'SwipeViewModel');
       state = state.copyWith(isLoading: false, errorMessage: 'Failed to reset deck.');

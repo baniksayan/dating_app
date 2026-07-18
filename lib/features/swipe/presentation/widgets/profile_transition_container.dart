@@ -113,7 +113,10 @@ class _ProfileTransitionContainerState extends State<ProfileTransitionContainer>
                   bottom: -photoParallax,
                   left: 0,
                   right: 0,
-                  child: ProfilePhotoGallery(photos: widget.user.photos),
+                  child: ProfilePhotoGallery(
+                    photos: widget.user.photos,
+                    userId: widget.user.id,
+                  ),
                 ),
 
                 // 2. iOS 26 Liquid Glass - Live Blur Overlay

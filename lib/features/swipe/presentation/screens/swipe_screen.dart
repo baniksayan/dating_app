@@ -721,6 +721,7 @@ class _MatchOverlayWidgetState extends State<_MatchOverlayWidget>
                           imageUrl: widget.matchedUser.photos.isNotEmpty
                               ? widget.matchedUser.photos.first
                               : '',
+                          seed: widget.matchedUser.id,
                           radius: 64,
                           isVerified: widget.matchedUser.isVerified,
                           isPremium: widget.matchedUser.isPremium,
