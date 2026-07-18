@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import '../core/config/app_router.dart';
 import '../core/extensions/build_context_ext.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -16,7 +16,8 @@ class _SplashScreenState extends State<SplashScreen> {
     super.initState();
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) {
-        context.go('/swipe');
+        // redicrection logic now handled centrally in app_router.dart via refreshListenable
+        routerConfigNotifier.completeInitialization();
       }
     });
   }
@@ -54,44 +55,6 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 }
 
-class OnboardingScreen extends StatelessWidget {
-  const OnboardingScreen({super.key});
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: context.colors.background,
-      body: Center(
-        child: Text('Onboarding Screen', style: context.typography.headline),
-      ),
-    );
-  }
-}
-
-class AuthScreen extends StatelessWidget {
-  const AuthScreen({super.key});
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: context.colors.background,
-      body: Center(
-        child: Text('Auth Screen', style: context.typography.headline),
-      ),
-    );
-  }
-}
-
-class OtpScreen extends StatelessWidget {
-  const OtpScreen({super.key});
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: context.colors.background,
-      body: Center(
-        child: Text('OTP Screen', style: context.typography.headline),
-      ),
-    );
-  }
-}
 
 class ExploreScreen extends StatelessWidget {
   const ExploreScreen({super.key});

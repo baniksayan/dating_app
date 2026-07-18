@@ -29,7 +29,10 @@ class Logger {
 
   static void _log(String prefix, String message, String? tag) {
     final String tagPrefix = tag != null ? '[$tag] ' : '';
-    // Use debugPrint to avoid platform-specific log truncations
-    debugPrint('$prefix: $tagPrefix$message');
+    final String logMsg = '$prefix: $tagPrefix$message';
+    // Use both print and debugPrint to ensure it appears in both standard terminal and IDE debug console
+    // ignore: avoid_print
+    print(logMsg);
+    debugPrint(logMsg);
   }
 }

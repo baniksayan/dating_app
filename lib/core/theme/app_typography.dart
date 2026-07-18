@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
 
 class AppTypography {
@@ -12,12 +11,14 @@ class AppTypography {
     required double letterSpacing,
     Color color = AppColors.textPrimary,
   }) {
-    return GoogleFonts.inter(
+    return TextStyle(
+      fontFamily: 'Inter',
       fontSize: fontSize,
       fontWeight: fontWeight,
       height: height,
       letterSpacing: letterSpacing,
       color: color,
+      fontFamilyFallback: const ['sans-serif'],
     );
   }
 

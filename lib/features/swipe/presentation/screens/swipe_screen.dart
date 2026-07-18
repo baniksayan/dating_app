@@ -16,6 +16,8 @@ import '../../../../core/widgets/swipe_action_button.dart';
 import '../../../../core/config/app_router.dart';
 import '../viewmodels/swipe_viewmodel.dart';
 import '../widgets/swipe_card.dart';
+import '../widgets/swipe_tutorial_overlay.dart';
+import '../../../../core/storage/hive_service.dart';
 
 class SwipeScreen extends ConsumerStatefulWidget {
   const SwipeScreen({super.key});
@@ -56,6 +58,20 @@ class _SwipeScreenState extends ConsumerState<SwipeScreen> {
       'Figuring it out',
     ];
     return goals[user.id.hashCode % goals.length];
+  }
+
+  bool _showTutorial = false;
+  final GlobalKey _cardDeckKey = GlobalKey();
+  final GlobalKey _actionRowKey = GlobalKey();
+
+  @override
+  void initState() {
+    super.initState();
+    final hasSeen = HiveService.instance.settingsBox.get(
+      'has_seen_swipe_tutorial',
+      defaultValue: false,
+    );
+    _showTutorial = !hasSeen;
   }
 
   @override
@@ -128,26 +144,29 @@ class _SwipeScreenState extends ConsumerState<SwipeScreen> {
           ),
 
           // 2. Main Content Area
-          SafeArea(
-            bottom: false,
-            child: Column(
-              children: [
-                // Top Custom Navigation Bar - Paint Isolated
-                RepaintBoundary(child: _buildTopBar(context)),
+          IgnorePointer(
+            ignoring: _showTutorial,
+            child: SafeArea(
+              bottom: false,
+              child: Column(
+                children: [
+                  // Top Custom Navigation Bar - Paint Isolated
+                  RepaintBoundary(child: _buildTopBar(context)),
 
-                // Active Swipe Deck
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      16,
-                      8,
-                      16,
-                      100,
-                    ), // Leave room for floating bottom tab bar
-                    child: _buildSwipeDeck(context, swipeState, viewModel),
+                  // Active Swipe Deck
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        16,
+                        8,
+                        16,
+                        100,
+                      ), // Leave room for floating bottom tab bar
+                      child: _buildSwipeDeck(context, swipeState, viewModel),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
 
@@ -188,6 +207,24 @@ class _SwipeScreenState extends ConsumerState<SwipeScreen> {
               secondsRemaining: _boostSecondsRemaining,
               relationshipGoal: _boostRelationshipGoal,
               onClose: () => setState(() => _showBoostMiniPopup = false),
+            ),
+
+          // 7. Interactive tutorial overlay
+          if (_showTutorial)
+            Positioned.fill(
+              child: SwipeTutorialOverlay(
+                cardDeckKey: _cardDeckKey,
+                actionRowKey: _actionRowKey,
+                onFinish: () async {
+                  await HiveService.instance.settingsBox.put(
+                    'has_seen_swipe_tutorial',
+                    true,
+                  );
+                  setState(() {
+                    _showTutorial = false;
+                  });
+                },
+              ),
             ),
         ],
       ),
@@ -323,6 +360,7 @@ class _SwipeScreenState extends ConsumerState<SwipeScreen> {
         // 3D Card Stack
         Expanded(
           child: Stack(
+            key: _cardDeckKey,
             clipBehavior: Clip.none,
             fit: StackFit.expand,
             children: List.generate(state.profiles.length, (index) {
@@ -360,12 +398,15 @@ class _SwipeScreenState extends ConsumerState<SwipeScreen> {
                       triggerSwipeNotifier: _swipeTriggerNotifier,
                       dragOffsetNotifier: isTop ? _dragOffsetNotifier : null,
                       isTopCard: isTop,
-                      initialRewindDirection: (isTop && user.id == _rewoundUserId && _rewoundDirection != null)
+                      initialRewindDirection:
+                          (isTop &&
+                              user.id == _rewoundUserId &&
+                              _rewoundDirection != null)
                           ? (_rewoundDirection == 'like'
-                              ? SwipeDirection.right
-                              : _rewoundDirection == 'dislike'
-                                  ? SwipeDirection.left
-                                  : SwipeDirection.up)
+                                ? SwipeDirection.right
+                                : _rewoundDirection == 'dislike'
+                                ? SwipeDirection.left
+                                : SwipeDirection.up)
                           : null,
                     ),
                   ),
@@ -378,7 +419,10 @@ class _SwipeScreenState extends ConsumerState<SwipeScreen> {
         const SizedBox(height: 20),
 
         // Floating Action Controls Row - Paint Isolated
-        RepaintBoundary(child: _buildActionRow(context, state, viewModel)),
+        RepaintBoundary(
+          key: _actionRowKey,
+          child: _buildActionRow(context, state, viewModel),
+        ),
       ],
     );
   }

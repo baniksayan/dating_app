@@ -3,6 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/stub_screens.dart';
 import '../../features/swipe/presentation/screens/swipe_screen.dart';
+import '../../features/auth/presentation/screens/welcome_screen.dart';
+import '../../features/auth/presentation/screens/email_entry_screen.dart';
+import '../../features/auth/presentation/screens/otp_verification_screen.dart';
+import '../../features/onboarding/presentation/screens/onboarding_screen.dart';
+import '../storage/hive_service.dart';
 import '../extensions/build_context_ext.dart';
 import '../theme/app_design_system.dart';
 import '../widgets/glass_card.dart';
@@ -12,7 +17,8 @@ class AppRoutes {
   AppRoutes._();
   static const String splash = 'splash';
   static const String onboarding = 'onboarding';
-  static const String auth = 'auth';
+  static const String welcome = 'welcome';
+  static const String emailEntry = 'email_entry';
   static const String otp = 'otp';
 
   static const String swipe = 'swipe';
@@ -29,6 +35,19 @@ class AppRoutes {
   static const String filters = 'filters';
 }
 
+class RouterConfigNotifier extends ChangeNotifier {
+  bool _isInitialized = false;
+  bool get isInitialized => _isInitialized;
+
+  void completeInitialization() {
+    _isInitialized = true;
+    notifyListeners();
+  }
+}
+
+// Global notifier to trigger GoRouter redirects
+final RouterConfigNotifier routerConfigNotifier = RouterConfigNotifier();
+
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
 final GlobalKey<NavigatorState> _swipeNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'swipeTab');
 final GlobalKey<NavigatorState> _exploreNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'exploreTab');
@@ -40,6 +59,40 @@ final GoRouter appRouter = GoRouter(
   navigatorKey: _rootNavigatorKey,
   initialLocation: '/',
   debugLogDiagnostics: true,
+  refreshListenable: routerConfigNotifier,
+  redirect: (BuildContext context, GoRouterState state) {
+    // 1. Wait for splash screen to complete its initial bootstrap
+    if (!routerConfigNotifier.isInitialized) {
+      return null;
+    }
+
+    final bool isAuthenticated = HiveService.instance.settingsBox.get('is_authenticated', defaultValue: false);
+    final bool isOnboardingCompleted = HiveService.instance.settingsBox.get('is_onboarding_completed', defaultValue: false);
+    final String location = state.uri.path;
+    final bool isAuthPath = location.startsWith('/auth');
+
+    // 2. Route Guard Redirect logic
+    if (!isAuthenticated) {
+      // If not authenticated, redirect to /auth welcome screen if we are not there
+      if (!isAuthPath) {
+        return '/auth';
+      }
+    } else {
+      // If authenticated
+      if (!isOnboardingCompleted) {
+        // Must complete onboarding
+        if (location != '/onboarding') {
+          return '/onboarding';
+        }
+      } else {
+        // Authenticated and onboarding complete -> main application
+        if (isAuthPath || location == '/onboarding' || location == '/') {
+          return '/swipe';
+        }
+      }
+    }
+    return null;
+  },
   routes: <RouteBase>[
     // Splash Route
     GoRoute(
@@ -55,16 +108,24 @@ final GoRouter appRouter = GoRouter(
       builder: (BuildContext context, GoRouterState state) => const OnboardingScreen(),
     ),
 
-    // Authentication Route
+    // Authentication Parent Welcome Route
     GoRoute(
       path: '/auth',
-      name: AppRoutes.auth,
-      builder: (BuildContext context, GoRouterState state) => const AuthScreen(),
+      name: AppRoutes.welcome,
+      builder: (BuildContext context, GoRouterState state) => const WelcomeScreen(),
       routes: [
+        GoRoute(
+          path: 'email',
+          name: AppRoutes.emailEntry,
+          builder: (BuildContext context, GoRouterState state) {
+            final isSignUp = state.uri.queryParameters['signup'] == 'true';
+            return EmailEntryScreen(isSignUp: isSignUp);
+          },
+        ),
         GoRoute(
           path: 'otp',
           name: AppRoutes.otp,
-          builder: (BuildContext context, GoRouterState state) => const OtpScreen(),
+          builder: (BuildContext context, GoRouterState state) => const OtpVerificationScreen(),
         ),
       ],
     ),

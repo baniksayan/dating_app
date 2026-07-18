@@ -20,6 +20,8 @@ dependencies:
   dio: ^5.5.0
   google_fonts: ^6.2.1
   path_provider: ^2.1.3
+  image_picker: ^1.2.3
+  geolocator: ^14.0.3
 
 dev_dependencies:
   flutter_test:
@@ -34,6 +36,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/icon/app_icon.png
+    - assets/data/job_titles.json
 
 flutter_launcher_icons:
   android: "launcher_icon"
