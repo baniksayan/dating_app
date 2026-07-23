@@ -1,7 +1,10 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/auth_state.dart';
+import '../models/resend_otp_model.dart';
 import '../repositories/auth_repository.dart';
+
+import '../models/verify_otp_model.dart';
 
 class AuthViewModel extends StateNotifier<AuthState> {
   final AuthRepository _authRepository;
@@ -47,10 +50,19 @@ class AuthViewModel extends StateNotifier<AuthState> {
     state = state.copyWith(isEmailLoading: true, clearEmailError: true);
 
     try {
-      await _authRepository.sendOtp(state.email.trim());
-      state = state.copyWith(isEmailLoading: false);
-      startResendTimer();
-      return true;
+      final response = await _authRepository.sendOtp(state.email.trim());
+
+      if (response.status == 'success') {
+        state = state.copyWith(isEmailLoading: false);
+        startResendTimer(60);
+        return true;
+      } else {
+        state = state.copyWith(
+          isEmailLoading: false,
+          emailError: response.message ?? 'Failed to send verification code. Please try again.',
+        );
+        return false;
+      }
     } catch (e) {
       state = state.copyWith(
         isEmailLoading: false,
@@ -60,10 +72,48 @@ class AuthViewModel extends StateNotifier<AuthState> {
     }
   }
 
-  Future<AuthResponse> verifyOtp() async {
+  Future<ResendOtp> resendOtp() async {
+    state = state.copyWith(isOtpLoading: true, clearOtpError: true);
+
+    try {
+      final response = await _authRepository.resendOtp(state.email.trim());
+      state = state.copyWith(isOtpLoading: false);
+
+      // Dynamically extract waiting seconds from backend response message (e.g. "Please wait 57 seconds...")
+      int countdownSeconds = 60; // static default 60 seconds
+      if (response.message != null) {
+        final RegExp secondsRegex = RegExp(r'(\d+)\s*second');
+        final match = secondsRegex.firstMatch(response.message!);
+        if (match != null && match.group(1) != null) {
+          countdownSeconds = int.tryParse(match.group(1)!) ?? 60;
+        }
+      }
+
+      if (response.status == 'success') {
+        startResendTimer(countdownSeconds);
+      } else {
+        // Status is error or rate-limited (e.g. "Please wait 57 seconds before requesting a new OTP.")
+        state = state.copyWith(
+          otpError: response.message ?? 'Please wait before requesting a new OTP.',
+        );
+        startResendTimer(countdownSeconds);
+      }
+
+      return response;
+    } catch (e) {
+      state = state.copyWith(
+        isOtpLoading: false,
+        otpError: 'Failed to resend code. Please check connection.',
+      );
+      return ResendOtp(status: 'error', message: 'Failed to resend code.');
+    }
+  }
+
+  Future<VerifyOtp> verifyOtp() async {
     if (state.otp.length != 6) {
-      state = state.copyWith(otpError: 'Please enter all 6 digits.');
-      return const AuthResponse(isSuccess: false, isOnboardingCompleted: false);
+      const errorMsg = 'Please enter all 6 digits.';
+      state = state.copyWith(otpError: errorMsg);
+      return VerifyOtp(status: 'error', message: errorMsg);
     }
 
     state = state.copyWith(isOtpLoading: true, clearOtpError: true);
@@ -74,30 +124,31 @@ class AuthViewModel extends StateNotifier<AuthState> {
         state.otp.trim(),
       );
 
-      if (response.isSuccess) {
+      if (response.status == 'success') {
         state = state.copyWith(
           isOtpLoading: false,
-          mockVerificationToken: response.token,
+          mockVerificationToken: response.data?.registrationToken,
         );
       } else {
         state = state.copyWith(
           isOtpLoading: false,
-          otpError: response.errorMessage ?? 'Incorrect code. Please try again.',
+          otpError: response.message ?? 'Incorrect code. Please try again.',
         );
       }
       return response;
     } catch (e) {
+      const errorMsg = 'Verification failed. Please check connection.';
       state = state.copyWith(
         isOtpLoading: false,
-        otpError: 'Verification failed. Please try again.',
+        otpError: errorMsg,
       );
-      return const AuthResponse(isSuccess: false, isOnboardingCompleted: false);
+      return VerifyOtp(status: 'error', message: errorMsg);
     }
   }
 
-  void startResendTimer() {
+  void startResendTimer([int seconds = 60]) {
     _timer?.cancel();
-    state = state.copyWith(resendCountdown: 30, canResend: false);
+    state = state.copyWith(resendCountdown: seconds, canResend: false);
 
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (state.resendCountdown > 1) {

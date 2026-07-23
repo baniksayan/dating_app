@@ -41,6 +41,46 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
     super.dispose();
   }
 
+  void _showCustomSnackBar(BuildContext context, String message, {bool isError = true}) {
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        backgroundColor: isError ? const Color(0xFF1E1B1B) : const Color(0xFF1B241E),
+        elevation: 8,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(
+            color: isError ? AppColors.error.withValues(alpha: 0.6) : AppColors.success.withValues(alpha: 0.6),
+            width: 1.0,
+          ),
+        ),
+        content: Row(
+          children: [
+            Icon(
+              isError ? Icons.error_outline_rounded : Icons.check_circle_outline_rounded,
+              color: isError ? AppColors.error : AppColors.success,
+              size: 22,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                message,
+                style: context.typography.body.copyWith(
+                  color: Colors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
+        ),
+        duration: const Duration(seconds: 4),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(authViewModelProvider);
@@ -125,20 +165,21 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
                             if (val.length == 6) {
                               _focusNode.unfocus();
                               final response = await viewModel.verifyOtp();
-                              if (response.isSuccess) {
+                              if (response.status == 'success') {
                                 if (mounted) {
                                   if (!context.mounted) return;
-                                  // Refresh router status
                                   routerConfigNotifier.completeInitialization();
-                                  
-                                  if (response.isOnboardingCompleted) {
-                                    context.go('/swipe');
-                                  } else {
-                                    context.go('/onboarding');
-                                  }
+                                  context.go('/onboarding');
                                 }
                               } else {
-                                // Error handling - clear local input so user can try again
+                                // Error handling - display premium error snackbar, vibrate, and clear input
+                                if (mounted && context.mounted) {
+                                  _showCustomSnackBar(
+                                    context,
+                                    response.message ?? 'Verification failed. Please try again.',
+                                    isError: true,
+                                  );
+                                }
                                 _textController.clear();
                                 viewModel.updateOtp('');
                                 _focusNode.requestFocus();
@@ -212,7 +253,14 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
                         onPressed: () async {
                           _textController.clear();
                           viewModel.updateOtp('');
-                          await viewModel.sendOtp();
+                          final res = await viewModel.resendOtp();
+                          if (mounted && context.mounted && res.message != null) {
+                            _showCustomSnackBar(
+                              context,
+                              res.message!,
+                              isError: res.status != 'success',
+                            );
+                          }
                           HapticFeedback.lightImpact();
                         },
                         child: Text(
@@ -223,11 +271,18 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
                           ),
                         ),
                       )
-                    : Text(
-                        'Resend code in 0:${state.resendCountdown.toString().padLeft(2, '0')}',
-                        style: context.typography.caption.copyWith(
-                          color: context.colors.textTertiary,
-                        ),
+                    : Builder(
+                        builder: (context) {
+                          final int minutes = state.resendCountdown ~/ 60;
+                          final int seconds = state.resendCountdown % 60;
+                          final String formattedTime = '$minutes:${seconds.toString().padLeft(2, '0')}';
+                          return Text(
+                            'Resend code in $formattedTime',
+                            style: context.typography.caption.copyWith(
+                              color: context.colors.textTertiary,
+                            ),
+                          );
+                        },
                       ),
               ),
 

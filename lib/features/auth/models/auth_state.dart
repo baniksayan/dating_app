@@ -16,7 +16,7 @@ class AuthState {
     this.isOtpLoading = false,
     this.emailError,
     this.otpError,
-    this.resendCountdown = 30,
+    this.resendCountdown = 60,
     this.canResend = false,
     this.mockVerificationToken,
   });
