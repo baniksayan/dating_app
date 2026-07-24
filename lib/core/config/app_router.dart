@@ -125,7 +125,10 @@ final GoRouter appRouter = GoRouter(
         GoRoute(
           path: 'otp',
           name: AppRoutes.otp,
-          builder: (BuildContext context, GoRouterState state) => const OtpVerificationScreen(),
+          builder: (BuildContext context, GoRouterState state) {
+            final isSignUp = state.uri.queryParameters['signup'] != 'false';
+            return OtpVerificationScreen(isSignUp: isSignUp);
+          },
         ),
       ],
     ),

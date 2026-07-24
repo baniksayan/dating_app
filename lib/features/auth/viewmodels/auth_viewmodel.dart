@@ -2,9 +2,9 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/auth_state.dart';
 import '../models/resend_otp_model.dart';
-import '../repositories/auth_repository.dart';
-
 import '../models/verify_otp_model.dart';
+import '../models/login_verify_otp_model.dart';
+import '../repositories/auth_repository.dart';
 
 class AuthViewModel extends StateNotifier<AuthState> {
   final AuthRepository _authRepository;
@@ -67,6 +67,37 @@ class AuthViewModel extends StateNotifier<AuthState> {
       state = state.copyWith(
         isEmailLoading: false,
         emailError: 'Failed to send verification code. Please check connection.',
+      );
+      return false;
+    }
+  }
+
+  Future<bool> loginSendOtp() async {
+    if (!isEmailValid) {
+      state = state.copyWith(emailError: 'Please enter a valid email address.');
+      return false;
+    }
+
+    state = state.copyWith(isEmailLoading: true, clearEmailError: true);
+
+    try {
+      final response = await _authRepository.loginSendOtp(state.email.trim());
+
+      if (response.status == 'success') {
+        state = state.copyWith(isEmailLoading: false);
+        startResendTimer(60);
+        return true;
+      } else {
+        state = state.copyWith(
+          isEmailLoading: false,
+          emailError: response.message ?? 'Failed to send login code. Please try again.',
+        );
+        return false;
+      }
+    } catch (e) {
+      state = state.copyWith(
+        isEmailLoading: false,
+        emailError: 'Failed to send login code. Please check connection.',
       );
       return false;
     }
@@ -143,6 +174,43 @@ class AuthViewModel extends StateNotifier<AuthState> {
         otpError: errorMsg,
       );
       return VerifyOtp(status: 'error', message: errorMsg);
+    }
+  }
+
+  Future<LoginVerifyOtp> loginVerifyOtp() async {
+    if (state.otp.length != 6) {
+      const errorMsg = 'Please enter all 6 digits.';
+      state = state.copyWith(otpError: errorMsg);
+      return LoginVerifyOtp(status: 'error', message: errorMsg);
+    }
+
+    state = state.copyWith(isOtpLoading: true, clearOtpError: true);
+
+    try {
+      final response = await _authRepository.loginVerifyOtp(
+        state.email.trim(),
+        state.otp.trim(),
+      );
+
+      if (response.status == 'success') {
+        state = state.copyWith(
+          isOtpLoading: false,
+          mockVerificationToken: response.data?.authToken,
+        );
+      } else {
+        state = state.copyWith(
+          isOtpLoading: false,
+          otpError: response.message ?? 'Incorrect code. Please try again.',
+        );
+      }
+      return response;
+    } catch (e) {
+      const errorMsg = 'Verification failed. Please check connection.';
+      state = state.copyWith(
+        isOtpLoading: false,
+        otpError: errorMsg,
+      );
+      return LoginVerifyOtp(status: 'error', message: errorMsg);
     }
   }
 

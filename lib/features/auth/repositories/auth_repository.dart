@@ -4,8 +4,10 @@ import '../../../core/helpers/logger_helper.dart';
 import '../../../core/network/dio_client.dart';
 import '../../../core/storage/hive_service.dart';
 import '../models/send_otp_model.dart';
+import '../models/login_send_otp_model.dart';
 import '../models/resend_otp_model.dart';
 import '../models/verify_otp_model.dart';
+import '../models/login_verify_otp_model.dart';
 
 class AuthResponse {
   final bool isSuccess;
@@ -22,14 +24,20 @@ class AuthResponse {
 }
 
 abstract class AuthRepository {
-  /// Request an OTP to be sent to the email address
+  /// Request an OTP to be sent to the email address (Registration)
   Future<SendOtp> sendOtp(String email);
+
+  /// Request a login OTP to be sent to the email address (Login)
+  Future<LoginSendOtp> loginSendOtp(String email);
 
   /// Resend an OTP code to the email address
   Future<ResendOtp> resendOtp(String email);
 
-  /// Verify the OTP code sent to the email address
+  /// Verify the OTP code sent to the email address (Registration)
   Future<VerifyOtp> verifyOtp(String email, String code);
+
+  /// Verify the login OTP code sent to the email address (Login)
+  Future<LoginVerifyOtp> loginVerifyOtp(String email, String code);
 
   /// Clear the authentication session
   Future<void> logout();
@@ -90,6 +98,56 @@ class AuthRepositoryImpl implements AuthRepository {
     } catch (e, stackTrace) {
       Logger.error('💥 [API UNEXPECTED ERROR]', e, stackTrace, 'AuthRepository');
       return SendOtp(status: 'error', message: e.toString());
+    }
+  }
+
+  @override
+  Future<LoginSendOtp> loginSendOtp(String email) async {
+    const String endpoint = '/login-send-otp.php';
+    final Map<String, dynamic> payload = {'email': email};
+
+    Logger.info('🚀 [POST REQUEST] Endpoint: https://dating-app-qdx5.onrender.com/api$endpoint', 'AuthRepository');
+    Logger.info('📦 Request Data: $payload', 'AuthRepository');
+
+    try {
+      final response = await _dioClient.post(
+        endpoint,
+        data: payload,
+      );
+
+      Logger.info('✅ [API RESPONSE] Status: ${response.statusCode}', 'AuthRepository');
+      Logger.info('📄 Raw Response Body: ${response.data}', 'AuthRepository');
+
+      Map<String, dynamic> jsonMap;
+      if (response.data is Map<String, dynamic>) {
+        jsonMap = response.data as Map<String, dynamic>;
+      } else if (response.data is String) {
+        jsonMap = jsonDecode(response.data as String) as Map<String, dynamic>;
+      } else {
+        jsonMap = Map<String, dynamic>.from(response.data as Map);
+      }
+
+      final loginSendOtpResponse = LoginSendOtp.fromJson(jsonMap);
+      Logger.info('✨ Parsed LoginSendOtp Model -> status: "${loginSendOtpResponse.status}", message: "${loginSendOtpResponse.message}"', 'AuthRepository');
+
+      return loginSendOtpResponse;
+    } on ApiException catch (e) {
+      Logger.error('❌ [API ERROR - ApiException] Status: ${e.statusCode}', e.message, null, 'AuthRepository');
+      if (e.errorData != null) {
+        Logger.error('📄 Error Data: ${e.errorData}', null, null, 'AuthRepository');
+        if (e.errorData is Map<String, dynamic>) {
+          return LoginSendOtp.fromJson(e.errorData as Map<String, dynamic>);
+        } else if (e.errorData is String) {
+          try {
+            final jsonMap = jsonDecode(e.errorData as String) as Map<String, dynamic>;
+            return LoginSendOtp.fromJson(jsonMap);
+          } catch (_) {}
+        }
+      }
+      return LoginSendOtp(status: 'error', message: e.message);
+    } catch (e, stackTrace) {
+      Logger.error('💥 [API UNEXPECTED ERROR]', e, stackTrace, 'AuthRepository');
+      return LoginSendOtp(status: 'error', message: e.toString());
     }
   }
 
@@ -206,11 +264,79 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<LoginVerifyOtp> loginVerifyOtp(String email, String code) async {
+    const String endpoint = '/login-verify-otp.php';
+    final Map<String, dynamic> payload = {
+      'email': email,
+      'otp': code,
+    };
+
+    Logger.info('🚀 [POST REQUEST] Endpoint: https://dating-app-qdx5.onrender.com/api$endpoint', 'AuthRepository');
+    Logger.info('📦 Request Data: $payload', 'AuthRepository');
+
+    try {
+      final response = await _dioClient.post(
+        endpoint,
+        data: payload,
+      );
+
+      Logger.info('✅ [API RESPONSE] Status: ${response.statusCode}', 'AuthRepository');
+      Logger.info('📄 Raw Response Body: ${response.data}', 'AuthRepository');
+
+      Map<String, dynamic> jsonMap;
+      if (response.data is Map<String, dynamic>) {
+        jsonMap = response.data as Map<String, dynamic>;
+      } else if (response.data is String) {
+        jsonMap = jsonDecode(response.data as String) as Map<String, dynamic>;
+      } else {
+        jsonMap = Map<String, dynamic>.from(response.data as Map);
+      }
+
+      final loginVerifyOtpResponse = LoginVerifyOtp.fromJson(jsonMap);
+      Logger.info('✨ Parsed LoginVerifyOtp Model -> status: "${loginVerifyOtpResponse.status}", message: "${loginVerifyOtpResponse.message}", auth_token: "${loginVerifyOtpResponse.data?.authToken}", user_id: ${loginVerifyOtpResponse.data?.userId}', 'AuthRepository');
+
+      if (loginVerifyOtpResponse.status == 'success') {
+        final token = loginVerifyOtpResponse.data?.authToken ?? '';
+        final userId = loginVerifyOtpResponse.data?.userId;
+
+        await _hiveService.settingsBox.put('is_authenticated', true);
+        await _hiveService.settingsBox.put('is_onboarding_completed', true);
+        await _hiveService.settingsBox.put('auth_token', token);
+        if (userId != null) {
+          await _hiveService.settingsBox.put('user_id', userId);
+        }
+        await _hiveService.settingsBox.put('auth_user_email', email);
+        Logger.info('🔒 Securely stored auth_token ("$token") and user_id ($userId) in local Hive storage', 'AuthRepository');
+      }
+
+      return loginVerifyOtpResponse;
+    } on ApiException catch (e) {
+      Logger.error('❌ [API ERROR - ApiException] Status: ${e.statusCode}', e.message, null, 'AuthRepository');
+      if (e.errorData != null) {
+        Logger.error('📄 Error Data: ${e.errorData}', null, null, 'AuthRepository');
+        if (e.errorData is Map<String, dynamic>) {
+          return LoginVerifyOtp.fromJson(e.errorData as Map<String, dynamic>);
+        } else if (e.errorData is String) {
+          try {
+            final jsonMap = jsonDecode(e.errorData as String) as Map<String, dynamic>;
+            return LoginVerifyOtp.fromJson(jsonMap);
+          } catch (_) {}
+        }
+      }
+      return LoginVerifyOtp(status: 'error', message: e.message);
+    } catch (e, stackTrace) {
+      Logger.error('💥 [API UNEXPECTED ERROR]', e, stackTrace, 'AuthRepository');
+      return LoginVerifyOtp(status: 'error', message: e.toString());
+    }
+  }
+
+  @override
   Future<void> logout() async {
     await _hiveService.settingsBox.put('is_authenticated', false);
     await _hiveService.settingsBox.put('is_onboarding_completed', false);
     await _hiveService.settingsBox.delete('auth_token');
     await _hiveService.settingsBox.delete('registration_token');
+    await _hiveService.settingsBox.delete('user_id');
     await _hiveService.settingsBox.delete('auth_user_email');
     await _hiveService.settingsBox.delete('onboarding_draft');
   }
@@ -230,6 +356,14 @@ class MockAuthRepository implements AuthRepository {
     await Future.delayed(const Duration(milliseconds: 1000));
     Logger.info('[MockAuth] OTP code sent successfully. Use code: $_mockOtp', 'MockAuthRepository');
     return SendOtp(status: 'success', message: 'OTP sent successfully.');
+  }
+
+  @override
+  Future<LoginSendOtp> loginSendOtp(String email) async {
+    Logger.info('[MockAuth] Requesting login OTP code to be sent to: $email', 'MockAuthRepository');
+    await Future.delayed(const Duration(milliseconds: 1000));
+    Logger.info('[MockAuth] Login OTP code sent successfully. Use code: $_mockOtp', 'MockAuthRepository');
+    return LoginSendOtp(status: 'success', message: 'OTP sent successfully.');
   }
 
   @override
@@ -260,7 +394,34 @@ class MockAuthRepository implements AuthRepository {
     return VerifyOtp(
       status: 'success',
       message: 'OTP verified successfully.',
-      data: Data(registrationToken: mockToken),
+      data: VerifyOtpData(registrationToken: mockToken),
+    );
+  }
+
+  @override
+  Future<LoginVerifyOtp> loginVerifyOtp(String email, String code) async {
+    Logger.info('[MockAuth] Verifying login OTP code: "$code" for email: $email', 'MockAuthRepository');
+    await Future.delayed(const Duration(milliseconds: 1200));
+
+    if (code != _mockOtp) {
+      Logger.warning('[MockAuth] Verification failed. Invalid code "$code" entered for $email', 'MockAuthRepository');
+      return LoginVerifyOtp(status: 'error', message: 'Invalid verification code. Please try again.');
+    }
+
+    Logger.info('[MockAuth] Verification successful for $email', 'MockAuthRepository');
+    const mockToken = 'mock_auth_token_xyz_123';
+    const mockUserId = 101;
+
+    await _hiveService.settingsBox.put('is_authenticated', true);
+    await _hiveService.settingsBox.put('is_onboarding_completed', true);
+    await _hiveService.settingsBox.put('auth_token', mockToken);
+    await _hiveService.settingsBox.put('user_id', mockUserId);
+    await _hiveService.settingsBox.put('auth_user_email', email);
+
+    return LoginVerifyOtp(
+      status: 'success',
+      message: 'Login successful.',
+      data: LoginVerifyOtpData(authToken: mockToken, userId: mockUserId),
     );
   }
 
@@ -270,6 +431,7 @@ class MockAuthRepository implements AuthRepository {
     await _hiveService.settingsBox.put('is_onboarding_completed', false);
     await _hiveService.settingsBox.delete('auth_token');
     await _hiveService.settingsBox.delete('registration_token');
+    await _hiveService.settingsBox.delete('user_id');
     await _hiveService.settingsBox.delete('auth_user_email');
     await _hiveService.settingsBox.delete('onboarding_draft');
   }

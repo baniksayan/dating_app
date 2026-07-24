@@ -1,39 +1,39 @@
 class VerifyOtp {
   String? status;
   String? message;
-  Data? data;
+  VerifyOtpData? data;
 
   VerifyOtp({this.status, this.message, this.data});
 
   VerifyOtp.fromJson(Map<String, dynamic> json) {
     status = json['status'];
     message = json['message'];
-    data = json['data'] != null ? Data.fromJson(json['data']) : null;
+    data = json['data'] != null ? VerifyOtpData.fromJson(json['data']) : null;
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-    data['status'] = status;
-    data['message'] = message;
-    if (this.data != null) {
-      data['data'] = this.data!.toJson();
+    final Map<String, dynamic> dataMap = <String, dynamic>{};
+    dataMap['status'] = status;
+    dataMap['message'] = message;
+    if (data != null) {
+      dataMap['data'] = data!.toJson();
     }
-    return data;
+    return dataMap;
   }
 }
 
-class Data {
+class VerifyOtpData {
   String? registrationToken;
 
-  Data({this.registrationToken});
+  VerifyOtpData({this.registrationToken});
 
-  Data.fromJson(Map<String, dynamic> json) {
+  VerifyOtpData.fromJson(Map<String, dynamic> json) {
     registrationToken = json['registration_token'];
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-    data['registration_token'] = registrationToken;
-    return data;
+    final Map<String, dynamic> dataMap = <String, dynamic>{};
+    dataMap['registration_token'] = registrationToken;
+    return dataMap;
   }
 }

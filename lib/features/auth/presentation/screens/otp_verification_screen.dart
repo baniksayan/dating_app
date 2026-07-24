@@ -10,7 +10,12 @@ import 'package:flutter/cupertino.dart';
 import '../../viewmodels/auth_viewmodel.dart';
 
 class OtpVerificationScreen extends ConsumerStatefulWidget {
-  const OtpVerificationScreen({super.key});
+  final bool isSignUp;
+
+  const OtpVerificationScreen({
+    super.key,
+    this.isSignUp = true,
+  });
 
   @override
   ConsumerState<OtpVerificationScreen> createState() => _OtpVerificationScreenState();
@@ -164,26 +169,50 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
                             viewModel.updateOtp(val);
                             if (val.length == 6) {
                               _focusNode.unfocus();
-                              final response = await viewModel.verifyOtp();
-                              if (response.status == 'success') {
-                                if (mounted) {
-                                  if (!context.mounted) return;
-                                  routerConfigNotifier.completeInitialization();
-                                  context.go('/onboarding');
+                              if (widget.isSignUp) {
+                                final response = await viewModel.verifyOtp();
+                                if (response.status == 'success') {
+                                  if (mounted) {
+                                    if (!context.mounted) return;
+                                    routerConfigNotifier.completeInitialization();
+                                    context.go('/onboarding');
+                                  }
+                                } else {
+                                  // Error handling - display premium error snackbar, vibrate, and clear input
+                                  if (mounted && context.mounted) {
+                                    _showCustomSnackBar(
+                                      context,
+                                      response.message ?? 'Verification failed. Please try again.',
+                                      isError: true,
+                                    );
+                                  }
+                                  _textController.clear();
+                                  viewModel.updateOtp('');
+                                  _focusNode.requestFocus();
+                                  HapticFeedback.heavyImpact();
                                 }
                               } else {
-                                // Error handling - display premium error snackbar, vibrate, and clear input
-                                if (mounted && context.mounted) {
-                                  _showCustomSnackBar(
-                                    context,
-                                    response.message ?? 'Verification failed. Please try again.',
-                                    isError: true,
-                                  );
+                                final response = await viewModel.loginVerifyOtp();
+                                if (response.status == 'success') {
+                                  if (mounted) {
+                                    if (!context.mounted) return;
+                                    routerConfigNotifier.completeInitialization();
+                                    context.go('/swipe');
+                                  }
+                                } else {
+                                  // Error handling - display premium error snackbar, vibrate, and clear input
+                                  if (mounted && context.mounted) {
+                                    _showCustomSnackBar(
+                                      context,
+                                      response.message ?? 'Login failed. Please try again.',
+                                      isError: true,
+                                    );
+                                  }
+                                  _textController.clear();
+                                  viewModel.updateOtp('');
+                                  _focusNode.requestFocus();
+                                  HapticFeedback.heavyImpact();
                                 }
-                                _textController.clear();
-                                viewModel.updateOtp('');
-                                _focusNode.requestFocus();
-                                HapticFeedback.heavyImpact();
                               }
                             }
                           },
@@ -253,13 +282,23 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
                         onPressed: () async {
                           _textController.clear();
                           viewModel.updateOtp('');
-                          final res = await viewModel.resendOtp();
-                          if (mounted && context.mounted && res.message != null) {
-                            _showCustomSnackBar(
-                              context,
-                              res.message!,
-                              isError: res.status != 'success',
-                            );
+                          if (widget.isSignUp) {
+                            final res = await viewModel.resendOtp();
+                            if (mounted && context.mounted && res.message != null) {
+                              _showCustomSnackBar(
+                                context,
+                                res.message!,
+                                isError: res.status != 'success',
+                              );
+                            }
+                          } else {
+                            if (mounted && context.mounted) {
+                              _showCustomSnackBar(
+                                context,
+                                'API will integrate here soon...',
+                                isError: false,
+                              );
+                            }
                           }
                           HapticFeedback.lightImpact();
                         },

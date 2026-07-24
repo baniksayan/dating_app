@@ -170,10 +170,12 @@ class _EmailEntryScreenState extends ConsumerState<EmailEntryScreen> {
                   // Resign keyboard focus
                   _focusNode.unfocus();
                   
-                  final bool success = await viewModel.sendOtp();
+                  final bool success = widget.isSignUp
+                      ? await viewModel.sendOtp()
+                      : await viewModel.loginSendOtp();
                   if (success && mounted) {
                     if (!context.mounted) return;
-                    context.go('/auth/otp');
+                    context.go('/auth/otp?signup=${widget.isSignUp}');
                   }
                 },
               ),
