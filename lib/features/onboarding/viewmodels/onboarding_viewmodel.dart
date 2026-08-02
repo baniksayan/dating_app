@@ -321,7 +321,7 @@ class OnboardingViewModel extends StateNotifier<OnboardingState> {
     return 'Pisces ♓';
   }
 
-  bool get isAgeValid {
+  bool isAgeValid([int minAge = 18, int maxAge = 100]) {
     final dob = state.dateOfBirth;
     if (dob == null) return false;
     final today = DateTime.now();
@@ -329,7 +329,7 @@ class OnboardingViewModel extends StateNotifier<OnboardingState> {
     if (today.month < dob.month || (today.month == dob.month && today.day < dob.day)) {
       age--;
     }
-    return age >= 18;
+    return age >= minAge && age <= maxAge;
   }
 
   int get calculatedAge {
@@ -349,7 +349,7 @@ class OnboardingViewModel extends StateNotifier<OnboardingState> {
     
     // Core details (40% total)
     if (state.firstName.isNotEmpty) score += 0.1;
-    if (state.dateOfBirth != null && isAgeValid) score += 0.1;
+    if (state.dateOfBirth != null && isAgeValid()) score += 0.1;
     if (state.gender != null && state.interestedIn != null) score += 0.1;
     if (state.photos.length >= 4) score += 0.1;
 
@@ -397,12 +397,12 @@ class OnboardingViewModel extends StateNotifier<OnboardingState> {
     return null;
   }
 
-  bool isStepValid(int step) {
+  bool isStepValid(int step, [int minAge = 18, int maxAge = 100]) {
     switch (step) {
       case 1: // Name
         return state.firstName.isNotEmpty && state.firstName.length >= 2;
       case 2: // Birthday
-        return isAgeValid;
+        return isAgeValid(minAge, maxAge);
       case 3: // Gender & preference
         return state.gender != null && state.interestedIn != null;
       case 4: // Dating Intention

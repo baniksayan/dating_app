@@ -14,10 +14,13 @@ import '../../viewmodels/onboarding_viewmodel.dart';
 import '../widgets/onboarding_photo_grid.dart';
 import '../widgets/onboarding_photo_tips_modal.dart';
 import '../widgets/why_we_ask_sheet.dart';
+import '../widgets/age_confirmation_dialog.dart';
 import '../../repositories/location_repository.dart';
 import '../../../../core/helpers/debouncer.dart';
 import '../../../../core/config/languages_data.dart';
 import '../../repositories/career_repository.dart';
+import '../../repositories/master_data_repository.dart';
+import '../../models/all_master_data_model.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
@@ -59,14 +62,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     'My ideal travel companion is...',
     'Let\'s debate this topic...',
     'Most people don\'t know that I...',
-  ];
-
-  final List<String> _openingQuestions = [
-    'Would you rather travel to the future or the past?',
-    'What\'s your go-to weekend morning routine?',
-    'What\'s the most adventurous thing you\'ve ever done?',
-    'What\'s a controversial opinion you hold?',
-    'Describe your perfect first date in three words.',
   ];
 
   // Selected questions for step 13 prompts
@@ -128,13 +123,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       }
 
       if (state.openingQuestion != null) {
-        if (_openingQuestions.contains(state.openingQuestion)) {
-          _openingQ = state.openingQuestion!;
-          _useCustomOpeningQ = false;
-        } else {
-          _customOpeningQController.text = state.openingQuestion!;
-          _useCustomOpeningQ = true;
-        }
+        _openingQ = state.openingQuestion!;
       }
       _openingAController.text = state.openingAnswer ?? '';
 
@@ -171,6 +160,167 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         curve: Curves.easeInOutCubic,
       );
     }
+  }
+
+  String _getEmojiForLabel(String label) {
+    final l = label.toLowerCase();
+    if (l.contains('female') || l.contains('woman') || l.contains('women')) {
+      return '👩';
+    }
+    if (l.contains('male') || l.contains('man') || l.contains('men')) {
+      return '👨';
+    }
+    if (l.contains('non-binary') || l.contains('everyone')) {
+      return '✨';
+    }
+    if (l.contains('long-term')) {
+      return '💎';
+    }
+    if (l.contains('life partner') || l.contains('marriage')) {
+      return '👥';
+    }
+    if (l.contains('short-term') ||
+        l.contains('casual') ||
+        l.contains('dates') ||
+        l.contains('coffee')) {
+      return '☕';
+    }
+    if (l.contains('figuring') || l.contains('open')) {
+      return '🧭';
+    }
+    if (l.contains('high school')) {
+      return '🎓';
+    }
+    if (l.contains('bachelor')) {
+      return '📜';
+    }
+    if (l.contains('master')) {
+      return '📚';
+    }
+    if (l.contains('phd') || l.contains('doctorate')) {
+      return '🔬';
+    }
+    if (l.contains('never')) {
+      return '🙅';
+    }
+    if (l.contains('social')) {
+      return '🍷';
+    }
+    if (l.contains('occasion')) {
+      return '🍸';
+    }
+    if (l.contains('regular')) {
+      return '🍻';
+    }
+    if (l.contains('quit') || l.contains('trying')) {
+      return '⏳';
+    }
+    if (l.contains('smoke') || l.contains('smoking')) {
+      return '🚬';
+    }
+    if (l.contains('active') || l.contains('daily')) {
+      return '⚡';
+    }
+    if (l.contains('often') || l.contains('run')) {
+      return '🏃';
+    }
+    if (l.contains('sometimes') || l.contains('walk')) {
+      return '🚶';
+    }
+    if (l.contains('relax') || l.contains('couch')) {
+      return '🛋️';
+    }
+    if (l.contains('early') || l.contains('bird') || l.contains('morning')) {
+      return '🌅';
+    }
+    if (l.contains('night') || l.contains('owl')) {
+      return '🦉';
+    }
+    if (l.contains('irregular')) {
+      return '🌀';
+    }
+    if (l.contains('everything') || l.contains('omnivore')) {
+      return '🍽️';
+    }
+    if (l.contains('veg') && !l.contains('vegan')) {
+      return '🥗';
+    }
+    if (l.contains('vegan')) {
+      return '🌱';
+    }
+    if (l.contains('gluten')) {
+      return '🌾';
+    }
+    if (l.contains('halal')) {
+      return '☪️';
+    }
+    if (l.contains('kosher')) {
+      return '✡️';
+    }
+    if (l.contains('have children') || l.contains('have kids')) {
+      return '👶';
+    }
+    if (l.contains('want children') || l.contains('want kids')) {
+      return '🍼';
+    }
+    if (l.contains('don\'t want children') || l.contains('no kids')) {
+      return '🙅';
+    }
+    if (l.contains('dog')) {
+      return '🐶';
+    }
+    if (l.contains('cat')) {
+      return '🐱';
+    }
+    if (l.contains('other pets') || l.contains('fish')) {
+      return '🐠';
+    }
+    if (l.contains('love them')) {
+      return '🐾';
+    }
+    if (l.contains('no pets')) {
+      return '🚫';
+    }
+    if (l.contains('text')) {
+      return '📱';
+    }
+    if (l.contains('call') || l.contains('phone')) {
+      return '📞';
+    }
+    if (l.contains('person') || l.contains('face')) {
+      return '🤝';
+    }
+    if (l.contains('video')) {
+      return '📹';
+    }
+    if (l.contains('words') || l.contains('affirmation')) {
+      return '💬';
+    }
+    if (l.contains('quality') || l.contains('time')) {
+      return '⏰';
+    }
+    if (l.contains('gift')) {
+      return '🎁';
+    }
+    if (l.contains('service')) {
+      return '🛠️';
+    }
+    if (l.contains('touch')) {
+      return '🤝';
+    }
+    if (l.contains('liberal')) {
+      return '🗽';
+    }
+    if (l.contains('conservative')) {
+      return '🦅';
+    }
+    if (l.contains('moderate')) {
+      return '⚖️';
+    }
+    if (l.contains('independent')) {
+      return '🌀';
+    }
+    return '✨';
   }
 
   void _fetchSuggestions(String query) {
@@ -447,15 +597,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 fontSize: 14,
               ),
             ),
-            // subtitle: suggestion.domain != null
-            //     ? Text(
-            //         suggestion.domain!,
-            //         style: context.typography.caption.copyWith(
-            //           color: Colors.white30,
-            //           fontSize: 11,
-            //         ),
-            //       )
-            //     : null,
             dense: true,
             onTap: () {
               HapticFeedback.lightImpact();
@@ -482,9 +623,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   Widget build(BuildContext context) {
     final state = ref.watch(onboardingViewModelProvider);
     final viewModel = ref.read(onboardingViewModelProvider.notifier);
+    final masterDataAsync = ref.watch(masterDataProvider);
+    final AllMasterData? masterData = masterDataAsync.value;
+
     final double progress = state.currentStep / 15.0;
 
-    // Determine if step is skippable/optional (sensitive background, habits, summary)
+    // Determine if step is skippable/optional
     final bool isSkippable =
         state.currentStep == 5 ||
         state.currentStep == 6 ||
@@ -523,7 +667,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         ),
         centerTitle: true,
         actions: [
-          // Step 12 displays photo tips modal option
           if (state.currentStep == 12)
             IconButton(
               icon: Icon(
@@ -561,38 +704,106 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       body: SafeArea(
         child: Column(
           children: [
+            // API Loading / Error Banner
+            if (masterDataAsync.isLoading)
+              LinearProgressIndicator(
+                color: context.colors.primary,
+                backgroundColor: Colors.transparent,
+                minHeight: 2,
+              )
+            else if (masterDataAsync.hasError)
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: context.colors.error.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: context.colors.error.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      CupertinoIcons.exclamationmark_triangle,
+                      color: context.colors.error,
+                      size: 16,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Failed to sync live options.',
+                        style: context.typography.caption.copyWith(
+                          color: Colors.white,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () => ref.invalidate(masterDataProvider),
+                      child: Text(
+                        'Retry',
+                        style: TextStyle(
+                          color: context.colors.primary,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
             Expanded(
               child: PageView(
                 controller: _pageController,
                 physics: const NeverScrollableScrollPhysics(),
                 children: [
                   _buildNameStep(context, state, viewModel),
-                  _buildBirthdayStep(context, state, viewModel),
-                  _buildGenderStep(context, state, viewModel),
-                  _buildIntentionStep(context, state, viewModel),
-                  _buildBackgroundStep(context, state, viewModel),
-                  _buildCareerStep(context, state, viewModel),
-                  _buildHabitsStep(context, state, viewModel),
-                  _buildFamilyStep(context, state, viewModel),
-                  _buildPersonalityStyleStep(context, state, viewModel),
-                  _buildFaithStep(context, state, viewModel),
+                  _buildBirthdayStep(context, state, viewModel, masterData),
+                  _buildGenderStep(context, state, viewModel, masterData),
+                  _buildIntentionStep(context, state, viewModel, masterData),
+                  _buildBackgroundStep(context, state, viewModel, masterData),
+                  _buildCareerStep(context, state, viewModel, masterData),
+                  _buildHabitsStep(context, state, viewModel, masterData),
+                  _buildFamilyStep(context, state, viewModel, masterData),
+                  _buildPersonalityStyleStep(
+                    context,
+                    state,
+                    viewModel,
+                    masterData,
+                  ),
+                  _buildFaithStep(context, state, viewModel, masterData),
                   _buildInterestsStep(context, state, viewModel),
                   _buildPhotosStep(context, state, viewModel),
                   _buildPromptsStep(context, state, viewModel),
-                  _buildOpeningMoveStep(context, state, viewModel),
+                  _buildOpeningMoveStep(context, state, viewModel, masterData),
                   _buildPreviewStep(context, state, viewModel),
                 ],
               ),
             ),
 
-            // Bottom Action Continue Button (Hidden on Summary/Preview screen as it uses a custom action button)
             if (state.currentStep < 15)
               Padding(
                 padding: const EdgeInsets.fromLTRB(24, 8, 24, 20),
                 child: PrimaryButton(
                   text: 'Continue',
-                  isDisabled: !viewModel.isStepValid(state.currentStep),
-                  onTap: () {
+                  isDisabled: !viewModel.isStepValid(
+                    state.currentStep,
+                    masterData?.data?.ageRange?.min ?? 18,
+                    masterData?.data?.ageRange?.max ?? 100,
+                  ),
+                  onTap: () async {
+                    if (state.currentStep == 2) {
+                      final confirmed = await AgeConfirmationDialog.show(
+                        context,
+                        age: viewModel.calculatedAge,
+                      );
+                      if (confirmed != true) return;
+                    }
                     viewModel.nextStep();
                     _handleStepTransition(state.currentStep);
                   },
@@ -670,10 +881,19 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     BuildContext context,
     OnboardingState state,
     OnboardingViewModel viewModel,
+    AllMasterData? masterData,
   ) {
     final DateTime now = DateTime.now();
+    final apiAgeRange = masterData?.data?.ageRange;
+    final int minAge = apiAgeRange?.min ?? 18;
+    final int maxAge = apiAgeRange?.max ?? 100;
+
     final DateTime initialDate =
-        state.dateOfBirth ?? DateTime(now.year - 20, now.month, now.day);
+        state.dateOfBirth ??
+        DateTime(now.year - (minAge + 2), now.month, now.day);
+
+    final bool isAgeValid = viewModel.isAgeValid(minAge, maxAge);
+    final int calculatedAge = viewModel.calculatedAge;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -689,7 +909,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'You must be 18 or older to join. Your zodiac sign is calculated automatically.',
+            maxAge < 100
+                ? 'You must be between $minAge and $maxAge years old to join.'
+                : 'You must be $minAge or older to join.',
             style: context.typography.body.copyWith(
               color: context.colors.textSecondary,
             ),
@@ -709,7 +931,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                       mode: CupertinoDatePickerMode.date,
                       initialDateTime: initialDate,
                       maximumDate: now,
-                      minimumYear: 1930,
+                      minimumYear: now.year - maxAge,
                       maximumYear: now.year,
                       onDateTimeChanged: (DateTime date) {
                         viewModel.updateDateOfBirth(date);
@@ -725,7 +947,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 color: context.colors.surface,
                 borderRadius: context.radius.borderLg,
                 border: Border.all(
-                  color: state.dateOfBirth != null && !viewModel.isAgeValid
+                  color: state.dateOfBirth != null && !isAgeValid
                       ? context.colors.error
                       : context.colors.divider,
                 ),
@@ -755,65 +977,39 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             ),
           ),
 
-          if (state.dateOfBirth != null) ...[
+          if (state.dateOfBirth != null && !isAgeValid) ...[
             const SizedBox(height: 16),
-            if (viewModel.isAgeValid)
-              Container(
-                decoration: BoxDecoration(
-                  color: const Color(0x0EFFFFFF),
-                  borderRadius: context.radius.borderMd,
-                  border: Border.all(color: context.colors.divider),
-                ),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                child: Row(
-                  children: [
-                    const Icon(
-                      CupertinoIcons.sparkles,
-                      color: Colors.amber,
-                      size: 18,
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      'Zodiac Sign: ',
-                      style: context.typography.body.copyWith(
-                        color: context.colors.textSecondary,
-                      ),
-                    ),
-                    Text(
-                      state.zodiac ?? '',
-                      style: context.typography.body.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              )
-            else
-              Text(
-                'You must be at least 18 years old to join.',
-                style: context.typography.caption.copyWith(
-                  color: context.colors.error,
-                  fontWeight: FontWeight.bold,
-                ),
+            Text(
+              calculatedAge < minAge
+                  ? 'You must be at least $minAge years old to join.'
+                  : 'Age must not exceed $maxAge years.',
+              style: context.typography.caption.copyWith(
+                color: context.colors.error,
+                fontWeight: FontWeight.bold,
               ),
+            ),
           ],
         ],
       ),
     );
   }
 
-  // STEP 3: Gender & Interests
+  // STEP 3: Gender & Preferences
   Widget _buildGenderStep(
     BuildContext context,
     OnboardingState state,
     OnboardingViewModel viewModel,
+    AllMasterData? masterData,
   ) {
-    final genders = ['Female', 'Male', 'Non-binary'];
-    final preferences = ['Men', 'Women', 'Everyone'];
+    final apiGenders = masterData?.data?.genders ?? [];
+    final genders = apiGenders.isNotEmpty
+        ? apiGenders.map((g) => g.displayText).toList()
+        : ['Female', 'Male', 'Non-binary'];
+
+    final apiShowMe = masterData?.data?.showMe ?? [];
+    final preferences = apiShowMe.isNotEmpty
+        ? apiShowMe.map((p) => p.displayText).toList()
+        : ['Men', 'Women', 'Everyone'];
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -867,6 +1063,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                         color: isSel ? Colors.black : Colors.white70,
                         fontWeight: FontWeight.bold,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ),
@@ -913,6 +1111,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                         color: isSel ? Colors.black : Colors.white70,
                         fontWeight: FontWeight.bold,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ),
@@ -929,29 +1129,48 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     BuildContext context,
     OnboardingState state,
     OnboardingViewModel viewModel,
+    AllMasterData? masterData,
   ) {
-    final intentions = [
-      {
-        'title': 'Long-term relationship',
-        'emoji': '💎',
-        'color': const Color(0xFFEF9A9A),
-      },
-      {
-        'title': 'Life partner',
-        'emoji': '👥',
-        'color': const Color(0xFFF48FB1),
-      },
-      {
-        'title': 'Open to short-term',
-        'emoji': '☕',
-        'color': const Color(0xFFFFCC80),
-      },
-      {
-        'title': 'Figuring it out',
-        'emoji': '🧭',
-        'color': const Color(0xFF80CBC4),
-      },
+    final apiGoals = masterData?.data?.relationshipGoals ?? [];
+    final colors = [
+      const Color(0xFFEF9A9A),
+      const Color(0xFFF48FB1),
+      const Color(0xFFFFCC80),
+      const Color(0xFF80CBC4),
+      const Color(0xFFCE93D8),
     ];
+
+    final intentions = apiGoals.isNotEmpty
+        ? apiGoals.asMap().entries.map((entry) {
+            final idx = entry.key;
+            final g = entry.value;
+            final title = g.displayText;
+            final emoji = g.emoji ?? _getEmojiForLabel(title);
+            final color = colors[idx % colors.length];
+            return {'title': title, 'emoji': emoji, 'color': color};
+          }).toList()
+        : [
+            {
+              'title': 'Long-term relationship',
+              'emoji': '💎',
+              'color': const Color(0xFFEF9A9A),
+            },
+            {
+              'title': 'Life partner',
+              'emoji': '👥',
+              'color': const Color(0xFFF48FB1),
+            },
+            {
+              'title': 'Open to short-term',
+              'emoji': '☕',
+              'color': const Color(0xFFFFCC80),
+            },
+            {
+              'title': 'Figuring it out',
+              'emoji': '🧭',
+              'color': const Color(0xFF80CBC4),
+            },
+          ];
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -1054,8 +1273,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     BuildContext context,
     OnboardingState state,
     OnboardingViewModel viewModel,
+    AllMasterData? masterData,
   ) {
-    final double currentHeight = (state.height ?? 170).toDouble();
+    final minH = (masterData?.data?.heightRange?.min ?? 140).toDouble();
+    final maxH = (masterData?.data?.heightRange?.max ?? 210).toDouble();
+    double currentHeight = (state.height ?? 170).toDouble();
+    if (currentHeight < minH) currentHeight = minH;
+    if (currentHeight > maxH) currentHeight = maxH;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -1092,8 +1316,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 ),
                 Slider(
                   value: currentHeight,
-                  min: 140,
-                  max: 210,
+                  min: minH,
+                  max: maxH,
                   activeColor: context.colors.primary,
                   inactiveColor: context.colors.divider,
                   onChanged: (val) {
@@ -1160,7 +1384,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                             final messenger = ScaffoldMessenger.of(context);
                             setState(() => _isLoadingLocation = true);
                             try {
-                              final position = await viewModel.detectUserLocation();
+                              final position = await viewModel
+                                  .detectUserLocation();
                               if (position != null) {
                                 final city = await ref
                                     .read(locationRepositoryProvider)
@@ -1176,7 +1401,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                                 if (mounted) {
                                   messenger.showSnackBar(
                                     const SnackBar(
-                                      content: Text('Could not detect location. Please enter manually.'),
+                                      content: Text(
+                                        'Could not detect location. Please enter manually.',
+                                      ),
                                     ),
                                   );
                                 }
@@ -1230,7 +1457,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                       'Japanese',
                       'Hindi',
                     ];
-                    // Automatically load any selected languages not in default list into custom list
                     for (final lang in state.languages) {
                       if (!defaultTopLanguages.contains(lang) &&
                           !_customAddedLanguages.contains(lang)) {
@@ -1280,7 +1506,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                           );
                         }),
 
-                        // The "+ More" trigger button
                         if (state.languages.length < 5)
                           ChoiceChip(
                             label: const Text('+ More'),
@@ -1313,14 +1538,25 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     BuildContext context,
     OnboardingState state,
     OnboardingViewModel viewModel,
+    AllMasterData? masterData,
   ) {
-    final educationOptions = [
-      {'label': 'High School', 'emoji': '🎓'},
-      {'label': 'Bachelors Degree', 'emoji': '📜'},
-      {'label': 'Masters Degree', 'emoji': '📚'},
-      {'label': 'PhD / Doctorate', 'emoji': '🔬'},
-      {'label': 'Other', 'emoji': '📝'},
-    ];
+    final apiEdu = masterData?.data?.educationLevels ?? [];
+    final educationOptions = apiEdu.isNotEmpty
+        ? apiEdu
+              .map(
+                (e) => {
+                  'label': e.displayText,
+                  'emoji': e.emoji ?? _getEmojiForLabel(e.displayText),
+                },
+              )
+              .toList()
+        : [
+            {'label': 'High School', 'emoji': '🎓'},
+            {'label': 'Bachelors Degree', 'emoji': '📜'},
+            {'label': 'Masters Degree', 'emoji': '📚'},
+            {'label': 'PhD / Doctorate', 'emoji': '🔬'},
+            {'label': 'Other', 'emoji': '📝'},
+          ];
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -1347,7 +1583,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             child: ListView(
               padding: EdgeInsets.zero,
               children: [
-                // Education List
                 Text(
                   'EDUCATION LEVEL',
                   style: context.typography.caption.copyWith(
@@ -1363,7 +1598,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 ),
                 const SizedBox(height: 28),
 
-                // Job Title
                 Text(
                   'OCCUPATION / JOB TITLE',
                   style: context.typography.caption.copyWith(
@@ -1413,7 +1647,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   _buildJobSuggestionsList(context, viewModel),
                 const SizedBox(height: 24),
 
-                // Company
                 Text(
                   'COMPANY / WORKPLACE',
                   style: context.typography.caption.copyWith(
@@ -1474,45 +1707,96 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     BuildContext context,
     OnboardingState state,
     OnboardingViewModel viewModel,
+    AllMasterData? masterData,
   ) {
-    final drinkingOptions = [
-      {'label': 'Never', 'emoji': '🙅'},
-      {'label': 'Socially', 'emoji': '🍷'},
-      {'label': 'Occasional', 'emoji': '🍸'},
-      {'label': 'Regularly', 'emoji': '🍻'},
-      {'label': 'Prefer not to say', 'emoji': '🤫'},
-    ];
+    final apiSmoking = masterData?.data?.smokingHabits ?? [];
+    final smokingOptions = apiSmoking.isNotEmpty
+        ? apiSmoking
+              .map(
+                (s) => {
+                  'label': s.displayText,
+                  'emoji': s.emoji ?? _getEmojiForLabel(s.displayText),
+                },
+              )
+              .toList()
+        : [
+            {'label': 'Never', 'emoji': '🚭'},
+            {'label': 'Social smoker', 'emoji': '💨'},
+            {'label': 'Occasional smoker', 'emoji': '🚬'},
+            {'label': 'Regular smoker', 'emoji': '🔥'},
+            {'label': 'Trying to quit', 'emoji': '⏳'},
+            {'label': 'Prefer not to say', 'emoji': '🤫'},
+          ];
 
-    final smokingOptions = [
-      {'label': 'Never', 'emoji': '🚭'},
-      {'label': 'Social smoker', 'emoji': '💨'},
-      {'label': 'Occasional smoker', 'emoji': '🚬'},
-      {'label': 'Regular smoker', 'emoji': '🔥'},
-      {'label': 'Trying to quit', 'emoji': '⏳'},
-      {'label': 'Prefer not to say', 'emoji': '🤫'},
-    ];
+    final apiDrinking = masterData?.data?.drinkingHabits ?? [];
+    final drinkingOptions = apiDrinking.isNotEmpty
+        ? apiDrinking
+              .map(
+                (d) => {
+                  'label': d.displayText,
+                  'emoji': d.emoji ?? _getEmojiForLabel(d.displayText),
+                },
+              )
+              .toList()
+        : [
+            {'label': 'Never', 'emoji': '🙅'},
+            {'label': 'Socially', 'emoji': '🍷'},
+            {'label': 'Occasional', 'emoji': '🍸'},
+            {'label': 'Regularly', 'emoji': '🍻'},
+            {'label': 'Prefer not to say', 'emoji': '🤫'},
+          ];
 
-    final dietOptions = [
-      {'label': 'Everything', 'emoji': '🍽️'},
-      {'label': 'Vegetarian', 'emoji': '🥗'},
-      {'label': 'Vegan', 'emoji': '🌱'},
-      {'label': 'Gluten-free', 'emoji': '🌾'},
-      {'label': 'Halal', 'emoji': '☪️'},
-      {'label': 'Kosher', 'emoji': '✡️'},
-    ];
+    final apiFitness = masterData?.data?.fitnessLevels ?? [];
+    final exerciseOptions = apiFitness.isNotEmpty
+        ? apiFitness
+              .map(
+                (f) => {
+                  'label': f.displayText,
+                  'emoji': f.emoji ?? _getEmojiForLabel(f.displayText),
+                },
+              )
+              .toList()
+        : [
+            {'label': 'Active daily', 'emoji': '⚡'},
+            {'label': 'Often', 'emoji': '🏃'},
+            {'label': 'Sometimes', 'emoji': '🚶'},
+            {'label': 'Never', 'emoji': '🛋️'},
+          ];
 
-    final exerciseOptions = [
-      {'label': 'Active daily', 'emoji': '⚡'},
-      {'label': 'Often', 'emoji': '🏃'},
-      {'label': 'Sometimes', 'emoji': '🚶'},
-      {'label': 'Never', 'emoji': '🛋️'},
-    ];
+    final apiSleep = masterData?.data?.sleepSchedules ?? [];
+    final sleepOptions = apiSleep.isNotEmpty
+        ? apiSleep
+              .map(
+                (s) => {
+                  'label': s.displayText,
+                  'emoji': s.emoji ?? _getEmojiForLabel(s.displayText),
+                },
+              )
+              .toList()
+        : [
+            {'label': 'Early bird', 'emoji': '🌅'},
+            {'label': 'Night owl', 'emoji': '🦉'},
+            {'label': 'Irregular', 'emoji': '🌀'},
+          ];
 
-    final sleepOptions = [
-      {'label': 'Early bird', 'emoji': '🌅'},
-      {'label': 'Night owl', 'emoji': '🦉'},
-      {'label': 'Irregular', 'emoji': '🌀'},
-    ];
+    final apiDiet = masterData?.data?.dietaryPreferences ?? [];
+    final dietOptions = apiDiet.isNotEmpty
+        ? apiDiet
+              .map(
+                (d) => {
+                  'label': d.displayText,
+                  'emoji': d.emoji ?? _getEmojiForLabel(d.displayText),
+                },
+              )
+              .toList()
+        : [
+            {'label': 'Everything', 'emoji': '🍽️'},
+            {'label': 'Vegetarian', 'emoji': '🥗'},
+            {'label': 'Vegan', 'emoji': '🌱'},
+            {'label': 'Gluten-free', 'emoji': '🌾'},
+            {'label': 'Halal', 'emoji': '☪️'},
+            {'label': 'Kosher', 'emoji': '✡️'},
+          ];
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -1539,7 +1823,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             child: ListView(
               padding: EdgeInsets.zero,
               children: [
-                // Smoking
                 _buildOptionSectionHeader(
                   context,
                   'SMOKING HABITS',
@@ -1553,7 +1836,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 ),
                 const SizedBox(height: 28),
 
-                // Drinking
                 _buildOptionSectionHeader(
                   context,
                   'DRINKING HABITS',
@@ -1567,7 +1849,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 ),
                 const SizedBox(height: 28),
 
-                // Exercise
                 _buildOptionSectionHeader(
                   context,
                   'FITNESS & EXERCISE',
@@ -1581,7 +1862,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 ),
                 const SizedBox(height: 28),
 
-                // Sleep
                 _buildOptionSectionHeader(
                   context,
                   'SLEEP SCHEDULE',
@@ -1595,7 +1875,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 ),
                 const SizedBox(height: 28),
 
-                // Diet
                 _buildOptionSectionHeader(
                   context,
                   'DIETARY PREFERENCES',
@@ -1657,21 +1936,42 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     BuildContext context,
     OnboardingState state,
     OnboardingViewModel viewModel,
+    AllMasterData? masterData,
   ) {
-    final familyOptions = [
-      {'label': 'Have children', 'emoji': '👶'},
-      {'label': 'Want children', 'emoji': '🍼'},
-      {'label': 'Don\'t want children', 'emoji': '🙅'},
-      {'label': 'Open / Not sure', 'emoji': '🤷'},
-    ];
+    final apiFamily = masterData?.data?.familyPlans ?? [];
+    final familyOptions = apiFamily.isNotEmpty
+        ? apiFamily
+              .map(
+                (f) => {
+                  'label': f.displayText,
+                  'emoji': f.emoji ?? _getEmojiForLabel(f.displayText),
+                },
+              )
+              .toList()
+        : [
+            {'label': 'Have children', 'emoji': '👶'},
+            {'label': 'Want children', 'emoji': '🍼'},
+            {'label': 'Don\'t want children', 'emoji': '🙅'},
+            {'label': 'Open / Not sure', 'emoji': '🤷'},
+          ];
 
-    final petOptions = [
-      {'label': 'Dog owner', 'emoji': '🐶'},
-      {'label': 'Cat owner', 'emoji': '🐱'},
-      {'label': 'Have other pets', 'emoji': '🐠'},
-      {'label': 'Love them but none', 'emoji': '🐾'},
-      {'label': 'No pets', 'emoji': '🚫'},
-    ];
+    final apiPets = masterData?.data?.petPreferences ?? [];
+    final petOptions = apiPets.isNotEmpty
+        ? apiPets
+              .map(
+                (p) => {
+                  'label': p.displayText,
+                  'emoji': p.emoji ?? _getEmojiForLabel(p.displayText),
+                },
+              )
+              .toList()
+        : [
+            {'label': 'Dog owner', 'emoji': '🐶'},
+            {'label': 'Cat owner', 'emoji': '🐱'},
+            {'label': 'Have other pets', 'emoji': '🐠'},
+            {'label': 'Love them but none', 'emoji': '🐾'},
+            {'label': 'No pets', 'emoji': '🚫'},
+          ];
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -1698,7 +1998,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             child: ListView(
               padding: EdgeInsets.zero,
               children: [
-                // Kids
                 Text(
                   'FAMILY PLANS',
                   style: context.typography.caption.copyWith(
@@ -1714,7 +2013,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 ),
                 const SizedBox(height: 32),
 
-                // Pets
                 Text(
                   'PETS IN YOUR LIFE',
                   style: context.typography.caption.copyWith(
@@ -1764,21 +2062,42 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     BuildContext context,
     OnboardingState state,
     OnboardingViewModel viewModel,
+    AllMasterData? masterData,
   ) {
-    final commOptions = [
-      {'label': 'Texter', 'emoji': '📱'},
-      {'label': 'Caller', 'emoji': '📞'},
-      {'label': 'In-person', 'emoji': '🤝'},
-      {'label': 'Video chat', 'emoji': '📹'},
-    ];
+    final apiComm = masterData?.data?.communicationStyles ?? [];
+    final commOptions = apiComm.isNotEmpty
+        ? apiComm
+              .map(
+                (c) => {
+                  'label': c.displayText,
+                  'emoji': c.emoji ?? _getEmojiForLabel(c.displayText),
+                },
+              )
+              .toList()
+        : [
+            {'label': 'Texter', 'emoji': '📱'},
+            {'label': 'Caller', 'emoji': '📞'},
+            {'label': 'In-person', 'emoji': '🤝'},
+            {'label': 'Video chat', 'emoji': '📹'},
+          ];
 
-    final loveOptions = [
-      {'label': 'Words of affirmation', 'emoji': '💬'},
-      {'label': 'Quality time', 'emoji': '⏰'},
-      {'label': 'Receiving gifts', 'emoji': '🎁'},
-      {'label': 'Acts of service', 'emoji': '🛠️'},
-      {'label': 'Physical touch', 'emoji': '🤝'},
-    ];
+    final apiLove = masterData?.data?.loveLanguages ?? [];
+    final loveOptions = apiLove.isNotEmpty
+        ? apiLove
+              .map(
+                (l) => {
+                  'label': l.displayText,
+                  'emoji': l.emoji ?? _getEmojiForLabel(l.displayText),
+                },
+              )
+              .toList()
+        : [
+            {'label': 'Words of affirmation', 'emoji': '💬'},
+            {'label': 'Quality time', 'emoji': '⏰'},
+            {'label': 'Receiving gifts', 'emoji': '🎁'},
+            {'label': 'Acts of service', 'emoji': '🛠️'},
+            {'label': 'Physical touch', 'emoji': '🤝'},
+          ];
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -1805,7 +2124,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             child: ListView(
               padding: EdgeInsets.zero,
               children: [
-                // Communication Preference
                 Text(
                   'COMMUNICATION STYLE',
                   style: context.typography.caption.copyWith(
@@ -1821,7 +2139,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 ),
                 const SizedBox(height: 32),
 
-                // Love Language
                 Text(
                   'PRIMARY LOVE LANGUAGE',
                   style: context.typography.caption.copyWith(
@@ -1848,24 +2165,39 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     BuildContext context,
     OnboardingState state,
     OnboardingViewModel viewModel,
+    AllMasterData? masterData,
   ) {
-    final religions = [
-      'Christian',
-      'Jewish',
-      'Muslim',
-      'Buddhist',
-      'Hindu',
-      'Atheist',
-      'Spiritual',
-      'Agnostic',
-    ];
-    final politics = [
-      {'label': 'Liberal', 'emoji': '🗽'},
-      {'label': 'Conservative', 'emoji': '🦅'},
-      {'label': 'Moderate', 'emoji': '⚖️'},
-      {'label': 'Independent', 'emoji': '🌀'},
-      {'label': 'Other', 'emoji': '🗳️'},
-    ];
+    final apiReligions = masterData?.data?.religions ?? [];
+    final religions = apiReligions.isNotEmpty
+        ? apiReligions.map((r) => r.displayText).toList()
+        : [
+            'Christian',
+            'Jewish',
+            'Muslim',
+            'Buddhist',
+            'Hindu',
+            'Atheist',
+            'Spiritual',
+            'Agnostic',
+          ];
+
+    final apiPolitics = masterData?.data?.politicalViews ?? [];
+    final politics = apiPolitics.isNotEmpty
+        ? apiPolitics
+              .map(
+                (p) => {
+                  'label': p.displayText,
+                  'emoji': p.emoji ?? _getEmojiForLabel(p.displayText),
+                },
+              )
+              .toList()
+        : [
+            {'label': 'Liberal', 'emoji': '🗽'},
+            {'label': 'Conservative', 'emoji': '🦅'},
+            {'label': 'Moderate', 'emoji': '⚖️'},
+            {'label': 'Independent', 'emoji': '🌀'},
+            {'label': 'Other', 'emoji': '🗳️'},
+          ];
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -1892,7 +2224,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             child: ListView(
               padding: EdgeInsets.zero,
               children: [
-                // Religion
                 Text(
                   'RELIGION / SPIRITUALITY',
                   style: context.typography.caption.copyWith(
@@ -1924,7 +2255,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
                 const SizedBox(height: 32),
 
-                // Politics
                 Text(
                   'POLITICAL VIEWS',
                   style: context.typography.caption.copyWith(
@@ -1946,7 +2276,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     );
   }
 
-  // STEP 11: Interests (Choose 3)
+  // STEP 11: Interests
   Widget _buildInterestsStep(
     BuildContext context,
     OnboardingState state,
@@ -2045,7 +2375,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     );
   }
 
-  // STEP 12: Photos Grid (Require >= 4)
+  // STEP 12: Photos Grid
   Widget _buildPhotosStep(
     BuildContext context,
     OnboardingState state,
@@ -2085,7 +2415,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     );
   }
 
-  // STEP 13: Personality Prompts (Choose 2-3 and write answers)
+  // STEP 13: Personality Prompts
   Widget _buildPromptsStep(
     BuildContext context,
     OnboardingState state,
@@ -2116,7 +2446,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             child: ListView(
               padding: EdgeInsets.zero,
               children: [
-                // PROMPT 1
                 _buildPromptSelector(context, 'PROMPT QUESTION 1', _promptQ1, (
                   val,
                 ) {
@@ -2133,7 +2462,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
                 const SizedBox(height: 32),
 
-                // PROMPT 2
                 _buildPromptSelector(context, 'PROMPT QUESTION 2', _promptQ2, (
                   val,
                 ) {
@@ -2284,7 +2612,28 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     BuildContext context,
     OnboardingState state,
     OnboardingViewModel viewModel,
+    AllMasterData? masterData,
   ) {
+    final apiOpening = masterData?.data?.openingMoves ?? [];
+    final openingQuestions = apiOpening.isNotEmpty
+        ? apiOpening
+              .map((m) => m.displayText)
+              .where((s) => s.isNotEmpty)
+              .toList()
+        : [
+            'Would you rather travel to the future or the past?',
+            'What\'s your go-to weekend morning routine?',
+            'What\'s the most adventurous thing you\'ve ever done?',
+            'What\'s a controversial opinion you hold?',
+            'Describe your perfect first date in three words.',
+          ];
+
+    if (openingQuestions.isNotEmpty &&
+        !_useCustomOpeningQ &&
+        !openingQuestions.contains(_openingQ)) {
+      _openingQ = openingQuestions.first;
+    }
+
     final String currentQ = _useCustomOpeningQ
         ? _customOpeningQController.text
         : _openingQ;
@@ -2314,7 +2663,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             child: ListView(
               padding: EdgeInsets.zero,
               children: [
-                // Selection Toggles
                 Row(
                   children: [
                     ChoiceChip(
@@ -2356,7 +2704,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                // Question Picker / Field
                 if (!_useCustomOpeningQ) ...[
                   GestureDetector(
                     onTap: () {
@@ -2368,9 +2715,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             child: ListView.builder(
                               shrinkWrap: true,
-                              itemCount: _openingQuestions.length,
+                              itemCount: openingQuestions.length,
                               itemBuilder: (context, index) {
-                                final question = _openingQuestions[index];
+                                final question = openingQuestions[index];
                                 return ListTile(
                                   title: Text(
                                     question,
@@ -2455,7 +2802,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
                 const SizedBox(height: 16),
 
-                // Answer Field
                 Text(
                   'YOUR ANSWER PREVIEW',
                   style: context.typography.caption.copyWith(
@@ -2528,7 +2874,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           ),
           const SizedBox(height: 16),
 
-          // Completeness Bar
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -2561,7 +2906,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
           const SizedBox(height: 20),
 
-          // Preview Card Container (Glassmorphic) - sized naturally, no Expanded
           GlassCard(
             blurAmount: AppBlur.medium,
             borderRadius: BorderRadius.circular(20),
@@ -2607,7 +2951,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                                 Text(
                                   state.zodiac!
                                       .substring(state.zodiac!.length - 2)
-                                      .trim(), // show zodiac sign emoji
+                                      .trim(),
                                   style: const TextStyle(fontSize: 16),
                                 ),
                             ],
@@ -2632,7 +2976,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 ),
                 const Divider(color: Colors.white12, height: 24),
 
-                // Key Attributes Grid
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
@@ -2669,7 +3012,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   ],
                 ),
 
-                // Prompt Preview if complete
                 if (state.personalityPrompts.isNotEmpty) ...[
                   const SizedBox(height: 16),
                   Container(
@@ -2707,8 +3049,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             ),
           ),
 
-          const Spacer(), // Pushes the action button cleanly to the bottom
-          // Primary Complete Action button
+          const Spacer(),
           PrimaryButton(
             text: 'Start discovering',
             onTap: () async {
@@ -2867,7 +3208,6 @@ class _LanguageSearchWidgetState extends State<_LanguageSearchWidget> {
       ),
       child: Column(
         children: [
-          // Header Drag Handle
           const SizedBox(height: 8),
           Container(
             width: 40,
@@ -2886,7 +3226,6 @@ class _LanguageSearchWidgetState extends State<_LanguageSearchWidget> {
           ),
           const SizedBox(height: 16),
 
-          // Search Field
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Container(
@@ -2934,7 +3273,6 @@ class _LanguageSearchWidgetState extends State<_LanguageSearchWidget> {
           ),
           const SizedBox(height: 12),
 
-          // Languages List
           Expanded(
             child: ListView.separated(
               padding: const EdgeInsets.symmetric(horizontal: 16),

@@ -1,5 +1,11 @@
 import 'package:dio/dio.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../helpers/logger_helper.dart';
+import '../config/api_config.dart';
+
+final dioClientProvider = Provider<DioClient>((ref) {
+  return DioClient(baseUrl: ApiConfig.baseUrl);
+});
 
 /// Custom API Exceptions wrapping Dio errors
 class ApiException implements Exception {

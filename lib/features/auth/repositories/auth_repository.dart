@@ -9,6 +9,8 @@ import '../models/resend_otp_model.dart';
 import '../models/verify_otp_model.dart';
 import '../models/login_verify_otp_model.dart';
 
+import '../../../core/config/api_config.dart';
+
 class AuthResponse {
   final bool isSuccess;
   final bool isOnboardingCompleted;
@@ -48,16 +50,16 @@ class AuthRepositoryImpl implements AuthRepository {
   final HiveService _hiveService;
 
   AuthRepositoryImpl({DioClient? dioClient, HiveService? hiveService})
-    : _dioClient = dioClient ?? DioClient(baseUrl: 'http://13.51.193.37/api'),
+    : _dioClient = dioClient ?? DioClient(baseUrl: ApiConfig.baseUrl),
       _hiveService = hiveService ?? HiveService.instance;
 
   @override
   Future<SendOtp> sendOtp(String email) async {
-    const String endpoint = '/send-otp.php';
+    const String endpoint = ApiConfig.sendOtp;
     final Map<String, dynamic> payload = {'email': email};
 
     Logger.info(
-      '🚀 [POST REQUEST] Endpoint: http://13.51.193.37/api$endpoint',
+      '🚀 [POST REQUEST] Endpoint: ${ApiConfig.baseUrl}$endpoint',
       'AuthRepository',
     );
     Logger.info('📦 Request Data: $payload', 'AuthRepository');
@@ -125,11 +127,11 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<LoginSendOtp> loginSendOtp(String email) async {
-    const String endpoint = '/login-send-otp.php';
+    const String endpoint = ApiConfig.loginSendOtp;
     final Map<String, dynamic> payload = {'email': email};
 
     Logger.info(
-      '🚀 [POST REQUEST] Endpoint: http://13.51.193.37/api$endpoint',
+      '🚀 [POST REQUEST] Endpoint: ${ApiConfig.baseUrl}$endpoint',
       'AuthRepository',
     );
     Logger.info('📦 Request Data: $payload', 'AuthRepository');
@@ -197,11 +199,11 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<ResendOtp> resendOtp(String email) async {
-    const String endpoint = '/resend-otp.php';
+    const String endpoint = ApiConfig.resendOtp;
     final Map<String, dynamic> payload = {'email': email};
 
     Logger.info(
-      '🚀 [POST REQUEST] Endpoint: http://13.51.193.37/api$endpoint',
+      '🚀 [POST REQUEST] Endpoint: ${ApiConfig.baseUrl}$endpoint',
       'AuthRepository',
     );
     Logger.info('📦 Request Data: $payload', 'AuthRepository');
@@ -269,11 +271,11 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<VerifyOtp> verifyOtp(String email, String code) async {
-    const String endpoint = '/verify-otp.php';
+    const String endpoint = ApiConfig.verifyOtp;
     final Map<String, dynamic> payload = {'email': email, 'otp': code};
 
     Logger.info(
-      '🚀 [POST REQUEST] Endpoint: http://13.51.193.37/api$endpoint',
+      '🚀 [POST REQUEST] Endpoint: ${ApiConfig.baseUrl}$endpoint',
       'AuthRepository',
     );
     Logger.info('📦 Request Data: $payload', 'AuthRepository');
@@ -353,11 +355,11 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<LoginVerifyOtp> loginVerifyOtp(String email, String code) async {
-    const String endpoint = '/login-verify-otp.php';
+    const String endpoint = ApiConfig.loginVerifyOtp;
     final Map<String, dynamic> payload = {'email': email, 'otp': code};
 
     Logger.info(
-      '🚀 [POST REQUEST] Endpoint: http://13.51.193.37/api$endpoint',
+      '🚀 [POST REQUEST] Endpoint: ${ApiConfig.baseUrl}$endpoint',
       'AuthRepository',
     );
     Logger.info('📦 Request Data: $payload', 'AuthRepository');
@@ -591,5 +593,6 @@ class MockAuthRepository implements AuthRepository {
 
 // Riverpod Provider for AuthRepository pointing to AuthRepositoryImpl
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
-  return AuthRepositoryImpl();
+  final dioClient = ref.watch(dioClientProvider);
+  return AuthRepositoryImpl(dioClient: dioClient);
 });

@@ -38,6 +38,7 @@ flutter:
   assets:
     - assets/icon/app_icon.png
     - assets/data/job_titles.json
+    - assets/svg_icons/
 
 flutter_launcher_icons:
   android: "launcher_icon"
