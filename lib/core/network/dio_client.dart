@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../helpers/logger_helper.dart';
 import '../config/api_config.dart';
+import '../storage/hive_service.dart';
 
 final dioClientProvider = Provider<DioClient>((ref) {
   return DioClient(baseUrl: ApiConfig.baseUrl);
@@ -93,34 +94,36 @@ class DioClient {
     int? code = error.response?.statusCode;
     dynamic data = error.response?.data;
 
-    switch (error.type) {
-      case DioExceptionType.connectionTimeout:
-      case DioExceptionType.sendTimeout:
-      case DioExceptionType.receiveTimeout:
-        message = 'Connection timed out. Please verify your internet connection.';
-        break;
-      case DioExceptionType.badResponse:
-        if (code == 401) {
-          message = 'Unauthorized request. Authentication failed.';
-        } else if (code == 403) {
-          message = 'Access forbidden.';
-        } else if (code == 404) {
-          message = 'Requested resource not found.';
-        } else if (code == 500) {
-          message = 'Internal server error occurred.';
-        } else if (data != null && data is Map && data.containsKey('message')) {
-          message = data['message'].toString();
-        }
-        break;
-      case DioExceptionType.cancel:
-        message = 'Request cancelled.';
-        break;
-      case DioExceptionType.connectionError:
-      case DioExceptionType.unknown:
-        message = 'Failed to connect to the server. Please check your network.';
-        break;
-      default:
-        break;
+    if (data != null && data is Map && data.containsKey('message') && data['message'] != null && data['message'].toString().isNotEmpty) {
+      message = data['message'].toString();
+    } else {
+      switch (error.type) {
+        case DioExceptionType.connectionTimeout:
+        case DioExceptionType.sendTimeout:
+        case DioExceptionType.receiveTimeout:
+          message = 'Connection timed out. Please verify your internet connection.';
+          break;
+        case DioExceptionType.badResponse:
+          if (code == 401) {
+            message = 'Unauthorized request. Authentication failed.';
+          } else if (code == 403) {
+            message = 'Access forbidden.';
+          } else if (code == 404) {
+            message = 'Requested resource not found.';
+          } else if (code == 500) {
+            message = 'Internal server error occurred.';
+          }
+          break;
+        case DioExceptionType.cancel:
+          message = 'Request cancelled.';
+          break;
+        case DioExceptionType.connectionError:
+        case DioExceptionType.unknown:
+          message = 'Failed to connect to the server. Please check your network.';
+          break;
+        default:
+          break;
+      }
     }
     return ApiException(message: message, statusCode: code, errorData: data);
   }
@@ -133,16 +136,19 @@ class _AuthInterceptor extends Interceptor {
 
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
-    // In production, retrieve the actual JWT from local secure storage
-    const String localJwtToken = 'mock_jwt_token_here';
-    options.headers['Authorization'] = 'Bearer $localJwtToken';
+    // Only attach Authorization header if an actual auth_token exists in Hive settings
+    final String? token = HiveService.instance.settingsBox.get('auth_token');
+    if (token != null && token.isNotEmpty) {
+      options.headers['Authorization'] = 'Bearer $token';
+    }
     handler.next(options);
   }
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
-    // Auto-refresh token on 401 Unauthorized status
-    if (err.response?.statusCode == 401) {
+    final String? token = HiveService.instance.settingsBox.get('auth_token');
+    // Auto-refresh token on 401 Unauthorized status if an existing auth token was sent
+    if (err.response?.statusCode == 401 && token != null && token.isNotEmpty) {
       Logger.warning('Access token expired. Triggering token refresh...', 'AuthInterceptor');
       
       try {

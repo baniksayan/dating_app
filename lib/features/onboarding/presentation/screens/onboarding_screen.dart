@@ -9,6 +9,7 @@ import '../../../../core/theme/app_design_system.dart';
 import '../../../../core/config/app_router.dart';
 import '../../../../core/widgets/primary_button.dart';
 import '../../../../core/widgets/glass_card.dart';
+import '../../../../core/storage/hive_service.dart';
 import '../../models/onboarding_state.dart';
 import '../../viewmodels/onboarding_viewmodel.dart';
 import '../widgets/onboarding_photo_grid.dart';
@@ -364,13 +365,17 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   ) {
     return Container(
       margin: const EdgeInsets.only(top: 4),
-      decoration: BoxDecoration(
+      constraints: const BoxConstraints(maxHeight: 200),
+      child: Material(
         color: context.colors.card,
         borderRadius: context.radius.borderLg,
-        border: Border.all(color: context.colors.divider),
-      ),
-      constraints: const BoxConstraints(maxHeight: 200),
-      child: ListView.separated(
+        clipBehavior: Clip.antiAlias,
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: context.radius.borderLg,
+            border: Border.all(color: context.colors.divider),
+          ),
+          child: ListView.separated(
         shrinkWrap: true,
         padding: EdgeInsets.zero,
         itemCount: _suggestions.length,
@@ -403,8 +408,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           );
         },
       ),
-    );
-  }
+    ),
+  ),
+);
+}
 
   void _showLanguageSearchBottomSheet(
     BuildContext context,
@@ -512,13 +519,17 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   ) {
     return Container(
       margin: const EdgeInsets.only(top: 4),
-      decoration: BoxDecoration(
+      constraints: const BoxConstraints(maxHeight: 200),
+      child: Material(
         color: context.colors.card,
         borderRadius: context.radius.borderLg,
-        border: Border.all(color: context.colors.divider),
-      ),
-      constraints: const BoxConstraints(maxHeight: 200),
-      child: ListView.separated(
+        clipBehavior: Clip.antiAlias,
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: context.radius.borderLg,
+            border: Border.all(color: context.colors.divider),
+          ),
+          child: ListView.separated(
         shrinkWrap: true,
         padding: EdgeInsets.zero,
         itemCount: _jobSuggestions.length,
@@ -546,8 +557,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           );
         },
       ),
-    );
-  }
+    ),
+  ),
+);
+}
 
   Widget _buildCompanySuggestionsList(
     BuildContext context,
@@ -555,13 +568,17 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   ) {
     return Container(
       margin: const EdgeInsets.only(top: 4),
-      decoration: BoxDecoration(
+      constraints: const BoxConstraints(maxHeight: 200),
+      child: Material(
         color: context.colors.card,
         borderRadius: context.radius.borderLg,
-        border: Border.all(color: context.colors.divider),
-      ),
-      constraints: const BoxConstraints(maxHeight: 200),
-      child: ListView.separated(
+        clipBehavior: Clip.antiAlias,
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: context.radius.borderLg,
+            border: Border.all(color: context.colors.divider),
+          ),
+          child: ListView.separated(
         shrinkWrap: true,
         padding: EdgeInsets.zero,
         itemCount: _companySuggestions.length,
@@ -609,8 +626,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           );
         },
       ),
-    );
-  }
+    ),
+  ),
+);
+}
 
   String _formatHeight(int cm) {
     final double inchesTotal = cm / 2.54;
@@ -628,188 +647,163 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
     final double progress = state.currentStep / 15.0;
 
-    // Determine if step is skippable/optional
-    final bool isSkippable =
-        state.currentStep == 5 ||
-        state.currentStep == 6 ||
-        state.currentStep == 7 ||
-        state.currentStep == 8 ||
-        state.currentStep == 9 ||
-        state.currentStep == 10 ||
-        state.currentStep == 13 ||
-        state.currentStep == 14;
-
-    return Scaffold(
-      backgroundColor: context.colors.background,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: state.currentStep > 1
-            ? IconButton(
-                icon: const Icon(AppIcons.back, color: Colors.white, size: 20),
-                onPressed: () {
-                  viewModel.prevStep();
-                  _handleStepTransition(state.currentStep - 2);
-                },
-              )
-            : null,
-        title: ClipRRect(
-          borderRadius: BorderRadius.circular(2),
-          child: SizedBox(
-            width: 140,
-            height: 4,
-            child: LinearProgressIndicator(
-              value: progress,
-              color: context.colors.primary,
-              backgroundColor: Colors.white12,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        if (state.currentStep >= 13) {
+          SystemNavigator.pop();
+        } else if (state.currentStep > 1) {
+          viewModel.prevStep();
+          _handleStepTransition(state.currentStep - 2);
+        }
+      },
+      child: Scaffold(
+        backgroundColor: context.colors.background,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: (state.currentStep > 1 && state.currentStep < 13)
+              ? IconButton(
+                  icon: const Icon(AppIcons.back, color: Colors.white, size: 20),
+                  onPressed: () {
+                    viewModel.prevStep();
+                    _handleStepTransition(state.currentStep - 2);
+                  },
+                )
+              : null,
+          title: ClipRRect(
+            borderRadius: BorderRadius.circular(2),
+            child: SizedBox(
+              width: 140,
+              height: 4,
+              child: LinearProgressIndicator(
+                value: progress,
+                color: context.colors.primary,
+                backgroundColor: Colors.white12,
+              ),
             ),
           ),
-        ),
-        centerTitle: true,
-        actions: [
-          if (state.currentStep == 12)
-            IconButton(
-              icon: Icon(
-                CupertinoIcons.lightbulb_fill,
-                color: context.colors.accent,
-                size: 20,
-              ),
-              onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (context) => const OnboardingPhotoTipsModal(),
-                );
-              },
-            ),
-
-          if (isSkippable)
-            CupertinoButton(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Text(
-                'Skip',
-                style: context.typography.button.copyWith(
+          centerTitle: true,
+          actions: [
+            if (state.currentStep == 12)
+              IconButton(
+                icon: Icon(
+                  CupertinoIcons.lightbulb_fill,
                   color: context.colors.accent,
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
+                  size: 20,
                 ),
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) => const OnboardingPhotoTipsModal(),
+                  );
+                },
               ),
-              onPressed: () {
-                HapticFeedback.lightImpact();
-                viewModel.nextStep();
-                _handleStepTransition(state.currentStep);
-              },
-            ),
-        ],
-      ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // API Loading / Error Banner
-            if (masterDataAsync.isLoading)
-              LinearProgressIndicator(
-                color: context.colors.primary,
-                backgroundColor: Colors.transparent,
-                minHeight: 2,
-              )
-            else if (masterDataAsync.hasError)
-              Container(
-                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
+          ],
+        ),
+        body: SafeArea(
+          child: Column(
+            children: [
+              // API Loading / Error Banner
+              if (masterDataAsync.isLoading)
+                LinearProgressIndicator(
+                  color: context.colors.primary,
+                  backgroundColor: Colors.transparent,
+                  minHeight: 2,
                 ),
-                decoration: BoxDecoration(
-                  color: context.colors.error.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: context.colors.error.withValues(alpha: 0.3),
+              if (masterDataAsync.hasError)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  color: Colors.redAccent.withValues(alpha: 0.2),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.error_outline, color: Colors.redAccent, size: 16),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Failed to load dynamic options. Using local defaults.',
+                          style: context.typography.caption.copyWith(color: Colors.white),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () => ref.invalidate(masterDataProvider),
+                        child: const Text('Retry', style: TextStyle(color: Colors.white)),
+                      ),
+                    ],
                   ),
                 ),
-                child: Row(
+              Expanded(
+                child: PageView(
+                  controller: _pageController,
+                  physics: const NeverScrollableScrollPhysics(),
                   children: [
-                    Icon(
-                      CupertinoIcons.exclamationmark_triangle,
-                      color: context.colors.error,
-                      size: 16,
+                    _buildNameStep(context, state, viewModel),
+                    _buildBirthdayStep(context, state, viewModel, masterData),
+                    _buildGenderStep(context, state, viewModel, masterData),
+                    _buildIntentionStep(context, state, viewModel, masterData),
+                    _buildBackgroundStep(context, state, viewModel, masterData),
+                    _buildCareerStep(context, state, viewModel, masterData),
+                    _buildHabitsStep(context, state, viewModel, masterData),
+                    _buildFamilyStep(context, state, viewModel, masterData),
+                    _buildPersonalityStyleStep(
+                      context,
+                      state,
+                      viewModel,
+                      masterData,
                     ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'Failed to sync live options.',
-                        style: context.typography.caption.copyWith(
-                          color: Colors.white,
-                          fontSize: 11,
-                        ),
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () => ref.invalidate(masterDataProvider),
-                      child: Text(
-                        'Retry',
-                        style: TextStyle(
-                          color: context.colors.primary,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
+                    _buildFaithStep(context, state, viewModel, masterData),
+                    _buildInterestsStep(context, state, viewModel),
+                    _buildPhotosStep(context, state, viewModel),
+                    _buildPromptsStep(context, state, viewModel),
+                    _buildOpeningMoveStep(context, state, viewModel, masterData),
+                    _buildPreviewStep(context, state, viewModel),
                   ],
                 ),
               ),
 
-            Expanded(
-              child: PageView(
-                controller: _pageController,
-                physics: const NeverScrollableScrollPhysics(),
-                children: [
-                  _buildNameStep(context, state, viewModel),
-                  _buildBirthdayStep(context, state, viewModel, masterData),
-                  _buildGenderStep(context, state, viewModel, masterData),
-                  _buildIntentionStep(context, state, viewModel, masterData),
-                  _buildBackgroundStep(context, state, viewModel, masterData),
-                  _buildCareerStep(context, state, viewModel, masterData),
-                  _buildHabitsStep(context, state, viewModel, masterData),
-                  _buildFamilyStep(context, state, viewModel, masterData),
-                  _buildPersonalityStyleStep(
-                    context,
-                    state,
-                    viewModel,
-                    masterData,
-                  ),
-                  _buildFaithStep(context, state, viewModel, masterData),
-                  _buildInterestsStep(context, state, viewModel),
-                  _buildPhotosStep(context, state, viewModel),
-                  _buildPromptsStep(context, state, viewModel),
-                  _buildOpeningMoveStep(context, state, viewModel, masterData),
-                  _buildPreviewStep(context, state, viewModel),
-                ],
-              ),
-            ),
+              if (state.currentStep < 15)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 8, 24, 20),
+                  child: PrimaryButton(
+                    text: 'Continue',
+                    isLoading: state.isLoading,
+                    isDisabled: !viewModel.isStepValid(
+                      state.currentStep,
+                      masterData?.data?.ageRange?.min ?? 18,
+                      masterData?.data?.ageRange?.max ?? 100,
+                    ),
+                    onTap: () async {
+                      if (state.currentStep == 2) {
+                        final confirmed = await AgeConfirmationDialog.show(
+                          context,
+                          age: viewModel.calculatedAge,
+                        );
+                        if (confirmed != true) return;
+                      }
 
-            if (state.currentStep < 15)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(24, 8, 24, 20),
-                child: PrimaryButton(
-                  text: 'Continue',
-                  isDisabled: !viewModel.isStepValid(
-                    state.currentStep,
-                    masterData?.data?.ageRange?.min ?? 18,
-                    masterData?.data?.ageRange?.max ?? 100,
+                      if (state.currentStep == 12) {
+                        // Call /upload-photo.php when user taps Continue on Step 12
+                        final uploadRes = await viewModel.uploadPhotos();
+                        if (uploadRes.status != 'success') {
+                          if (!context.mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(uploadRes.message ?? 'Photo upload failed. Please try again.'),
+                              backgroundColor: Colors.redAccent,
+                            ),
+                          );
+                          return;
+                        }
+                      }
+
+                      viewModel.nextStep();
+                      _handleStepTransition(state.currentStep);
+                    },
                   ),
-                  onTap: () async {
-                    if (state.currentStep == 2) {
-                      final confirmed = await AgeConfirmationDialog.show(
-                        context,
-                        age: viewModel.calculatedAge,
-                      );
-                      if (confirmed != true) return;
-                    }
-                    viewModel.nextStep();
-                    _handleStepTransition(state.currentStep);
-                  },
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -842,7 +836,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           ),
           const SizedBox(height: 40),
           Text(
-            'FIRST NAME',
+            'FULL NAME',
             style: context.typography.caption.copyWith(
               fontWeight: FontWeight.bold,
               letterSpacing: 1.0,
@@ -2513,15 +2507,18 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     itemCount: _promptQuestions.length,
                     itemBuilder: (context, index) {
                       final question = _promptQuestions[index];
-                      return ListTile(
-                        title: Text(
-                          question,
-                          style: const TextStyle(color: Colors.white),
+                      return Material(
+                        color: Colors.transparent,
+                        child: ListTile(
+                          title: Text(
+                            question,
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                          onTap: () {
+                            onSelected(question);
+                            Navigator.pop(context);
+                          },
                         ),
-                        onTap: () {
-                          onSelected(question);
-                          Navigator.pop(context);
-                        },
                       );
                     },
                   ),
@@ -2718,19 +2715,22 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                               itemCount: openingQuestions.length,
                               itemBuilder: (context, index) {
                                 final question = openingQuestions[index];
-                                return ListTile(
-                                  title: Text(
-                                    question,
-                                    style: const TextStyle(color: Colors.white),
-                                  ),
-                                  onTap: () {
-                                    setState(() => _openingQ = question);
-                                    viewModel.updateOpeningMove(
+                                return Material(
+                                  color: Colors.transparent,
+                                  child: ListTile(
+                                    title: Text(
                                       question,
-                                      _openingAController.text,
-                                    );
-                                    Navigator.pop(context);
-                                  },
+                                      style: const TextStyle(color: Colors.white),
+                                    ),
+                                    onTap: () {
+                                      setState(() => _openingQ = question);
+                                      viewModel.updateOpeningMove(
+                                        question,
+                                        _openingAController.text,
+                                      );
+                                      Navigator.pop(context);
+                                    },
+                                  ),
                                 );
                               },
                             ),
@@ -2925,12 +2925,15 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                         border: Border.all(color: context.colors.divider),
                       ),
                       clipBehavior: Clip.antiAlias,
-                      child: state.photos.isNotEmpty
+                      child: (state.photos.isNotEmpty && File(state.photos.first).existsSync())
                           ? Image.file(
                               File(state.photos.first),
                               fit: BoxFit.cover,
                             )
-                          : Container(color: Colors.white12),
+                          : Container(
+                              color: context.colors.surface,
+                              child: const Icon(CupertinoIcons.person_fill, color: Colors.white30),
+                            ),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
@@ -2939,21 +2942,26 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                         children: [
                           Row(
                             children: [
-                              Text(
-                                '${state.firstName}, ${viewModel.calculatedAge}',
-                                style: context.typography.title.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
+                              Flexible(
+                                child: Text(
+                                  '${state.firstName}, ${viewModel.calculatedAge}',
+                                  style: context.typography.title.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
                                 ),
                               ),
-                              const SizedBox(width: 6),
-                              if (state.zodiac != null)
+                              if (state.zodiac != null) ...[
+                                const SizedBox(width: 6),
                                 Text(
                                   state.zodiac!
                                       .substring(state.zodiac!.length - 2)
                                       .trim(),
                                   style: const TextStyle(fontSize: 16),
                                 ),
+                              ],
                             ],
                           ),
                           const SizedBox(height: 4),
@@ -2968,6 +2976,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                             style: context.typography.caption.copyWith(
                               color: Colors.white70,
                             ),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
                           ),
                         ],
                       ),
@@ -3052,12 +3062,39 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           const Spacer(),
           PrimaryButton(
             text: 'Start discovering',
+            isLoading: state.isLoading,
             onTap: () async {
-              final success = await viewModel.completeOnboarding();
-              if (success && mounted) {
-                if (!context.mounted) return;
-                routerConfigNotifier.completeInitialization();
-                context.go('/swipe');
+              final result = await viewModel.completeOnboarding();
+              if (!context.mounted) return;
+
+              if (result.isSuccess) {
+                // Verify auth_token is securely saved in Hive before completing route initialization & navigating
+                final String? storedToken = HiveService.instance.settingsBox.get('auth_token');
+                final bool isCompleted = HiveService.instance.settingsBox.get('is_onboarding_completed', defaultValue: false);
+
+                if (storedToken != null && storedToken.isNotEmpty && isCompleted) {
+                  HapticFeedback.mediumImpact();
+                  routerConfigNotifier.completeInitialization();
+                  context.go('/swipe');
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Failed to save session token locally. Please try again.'),
+                      backgroundColor: Colors.redAccent,
+                    ),
+                  );
+                }
+              } else {
+                HapticFeedback.vibrate();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      result.errorMessage ?? 'Registration failed. Please check your connection and try again.',
+                    ),
+                    backgroundColor: Colors.redAccent,
+                    duration: const Duration(seconds: 4),
+                  ),
+                );
               }
             },
           ),
@@ -3285,39 +3322,42 @@ class _LanguageSearchWidgetState extends State<_LanguageSearchWidget> {
                 final isMaxReached = widget.selectedLanguages.length >= 5;
                 final isEnabled = isSelected || !isMaxReached;
 
-                return ListTile(
-                  title: Text(
-                    lang,
-                    style: TextStyle(
-                      color: isEnabled ? Colors.white : Colors.white30,
-                      fontWeight: isSelected
-                          ? FontWeight.bold
-                          : FontWeight.normal,
+                return Material(
+                  color: Colors.transparent,
+                  child: ListTile(
+                    title: Text(
+                      lang,
+                      style: TextStyle(
+                        color: isEnabled ? Colors.white : Colors.white30,
+                        fontWeight: isSelected
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                      ),
                     ),
-                  ),
-                  trailing: isSelected
-                      ? Icon(
-                          CupertinoIcons.checkmark_alt_circle_fill,
-                          color: context.colors.primary,
-                          size: 22,
-                        )
-                      : null,
-                  onTap: isEnabled
-                      ? () {
-                          HapticFeedback.lightImpact();
-                          widget.onLanguageSelected(lang);
-                          Navigator.pop(context);
-                        }
-                      : () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                'You can select a maximum of 5 languages.',
+                    trailing: isSelected
+                        ? Icon(
+                            CupertinoIcons.checkmark_alt_circle_fill,
+                            color: context.colors.primary,
+                            size: 22,
+                          )
+                        : null,
+                    onTap: isEnabled
+                        ? () {
+                            HapticFeedback.lightImpact();
+                            widget.onLanguageSelected(lang);
+                            Navigator.pop(context);
+                          }
+                        : () {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'You can select a maximum of 5 languages.',
+                                ),
+                                duration: Duration(seconds: 2),
                               ),
-                              duration: Duration(seconds: 2),
-                            ),
-                          );
-                        },
+                            );
+                          },
+                  ),
                 );
               },
             ),

@@ -5,17 +5,32 @@ import '../../../core/storage/hive_service.dart';
 import '../../../core/models/user_model.dart';
 import '../../../core/helpers/logger_helper.dart';
 import '../models/onboarding_state.dart';
+import '../models/upload_photo_model.dart';
 import '../repositories/location_repository.dart';
+import '../repositories/photo_repository.dart';
+import '../repositories/registration_repository.dart';
+
+class RegistrationResult {
+  final bool isSuccess;
+  final String? errorMessage;
+  RegistrationResult({required this.isSuccess, this.errorMessage});
+}
 
 class OnboardingViewModel extends StateNotifier<OnboardingState> {
   final HiveService _hiveService;
   final LocationRepository _locationRepository;
+  final PhotoRepository _photoRepository;
+  final RegistrationRepository _registrationRepository;
 
   OnboardingViewModel({
     HiveService? hiveService,
     LocationRepository? locationRepository,
+    PhotoRepository? photoRepository,
+    RegistrationRepository? registrationRepository,
   })  : _hiveService = hiveService ?? HiveService.instance,
         _locationRepository = locationRepository ?? PhotonLocationRepository(),
+        _photoRepository = photoRepository ?? ApiPhotoRepository(),
+        _registrationRepository = registrationRepository ?? ApiRegistrationRepository(),
         super(const OnboardingState()) {
     _loadDraft();
   }
@@ -435,70 +450,198 @@ class OnboardingViewModel extends StateNotifier<OnboardingState> {
     }
   }
 
-  /// Finalize profile onboarding and register user session
-  Future<bool> completeOnboarding() async {
+  /// Finalize profile onboarding: Submit registration to /register.php and save auth token securely in Hive.
+  Future<RegistrationResult> completeOnboarding() async {
+    state = state.copyWith(isLoading: true);
     try {
-      // Create new UserModel populated from all onboarding inputs
-      final newUser = UserModel(
-        id: 'user_onboarded_${DateTime.now().millisecondsSinceEpoch}',
-        name: state.firstName,
-        age: calculatedAge,
-        gender: state.gender ?? 'non-binary',
-        bio: state.personalityPrompts.isNotEmpty
-            ? state.personalityPrompts.entries.map((e) => '${e.key}: "${e.value}"').join('\n\n')
-            : 'Looking to connect and share new memories.',
-        photos: state.photos.isNotEmpty 
-            ? state.photos 
-            : ['https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=600'],
-        distance: 1.2,
-        isVerified: false,
-        isPremium: false,
-        interests: state.interests,
-        jobTitle: state.jobTitle?.isNotEmpty == true ? state.jobTitle! : 'Member',
-        company: state.company?.isNotEmpty == true ? state.company! : 'DatingApp',
-        locationName: state.hometown ?? 'New York, NY',
-        height: state.height,
-        datingIntention: state.intention,
-        latitude: state.latitude,
-        longitude: state.longitude,
-        education: state.education,
-        hometown: state.hometown,
-        languages: state.languages,
-        exercise: state.exercise,
-        diet: state.diet,
-        pets: state.pets,
-        sleepSchedule: state.sleepSchedule,
-        communicationStyle: state.communicationStyle,
-        loveLanguage: state.loveLanguage,
-        zodiac: state.zodiac,
-        familyPlans: state.familyPlans,
-        politics: state.politics,
-        religion: state.religion,
-        drinking: state.drinking,
-        smoking: state.smoking,
-        personalityPrompts: state.personalityPrompts,
-        openingMove: state.openingQuestion != null && state.openingAnswer!.isNotEmpty
-            ? {'question': state.openingQuestion!, 'answer': state.openingAnswer!}
-            : null,
-      );
+      Logger.info('==================================================', 'CompleteOnboarding');
+      Logger.info('🚀 Starting Final Onboarding Registration Flow...', 'CompleteOnboarding');
 
-      // Save user to Hive users database
-      await _hiveService.usersBox.put(newUser.id, jsonEncode(newUser.toJson()));
-      
-      // Update session onboarding status flags
-      await _hiveService.settingsBox.put('is_onboarding_completed', true);
-      
-      // Reset seen tutorial flag to false so the tutorial runs exactly once
-      await _hiveService.settingsBox.put('has_seen_swipe_tutorial', false);
-      
-      // Delete draft key
-      await _hiveService.settingsBox.delete(_draftKey);
+      // 1. Determine photo filenames payload: use uploadedPhotoFilenames if available, otherwise upload photos now
+      List<String> photoPayload = state.uploadedPhotoFilenames;
+      if (photoPayload.isEmpty && state.photos.isNotEmpty) {
+        Logger.info('📷 Uploading local photo files via /upload-photo.php...', 'CompleteOnboarding');
+        final uploadResponse = await _photoRepository.uploadPhotos(state.photos);
+        if (uploadResponse.data?.filenames != null && uploadResponse.data!.filenames!.isNotEmpty) {
+          photoPayload = uploadResponse.data!.filenames!;
+          state = state.copyWith(uploadedPhotoFilenames: photoPayload);
+          _saveDraft();
+        } else {
+          photoPayload = state.photos;
+        }
+      }
 
-      Logger.info('Successfully completed onboarding for ${newUser.name}', 'OnboardingViewModel');
-      return true;
+      // 2. Retrieve registration_token and email from Hive settings
+      final String? registrationToken = _hiveService.settingsBox.get('registration_token');
+      final String? storedEmail = _hiveService.settingsBox.get('auth_user_email');
+      Logger.info('🔒 Step 1: Retrieved registration_token from Hive: "$registrationToken"', 'CompleteOnboarding');
+
+      if (registrationToken == null || registrationToken.isEmpty) {
+        Logger.error('❌ Missing registration_token in Hive', null, null, 'CompleteOnboarding');
+        return RegistrationResult(
+          isSuccess: false,
+          errorMessage: 'Missing registration token. Please restart authentication.',
+        );
+      }
+
+      // 3. Prepare payload for /register.php
+      final Map<String, dynamic> registerPayload = {
+        'registration_token': registrationToken,
+        'first_name': state.firstName,
+        'name': state.firstName,
+        'birth_date': state.dateOfBirth?.toIso8601String().split('T').first,
+        'date_of_birth': state.dateOfBirth?.toIso8601String().split('T').first,
+        'dob': state.dateOfBirth?.toIso8601String().split('T').first,
+        'gender': state.gender,
+        'show_me': state.interestedIn,
+        'relationship_goals': state.intention,
+        'height': state.height,
+        'education': state.education,
+        'hometown': state.hometown,
+        'languages': state.languages,
+        'job_title': state.jobTitle,
+        'company': state.company,
+        'smoking': state.smoking,
+        'drinking': state.drinking,
+        'exercise': state.exercise,
+        'sleep_schedule': state.sleepSchedule,
+        'diet': state.diet,
+        'family_plans': state.familyPlans,
+        'pets': state.pets,
+        'communication_style': state.communicationStyle,
+        'love_language': state.loveLanguage,
+        'zodiac': state.zodiac,
+        'religion': state.religion,
+        'politics': state.politics,
+        'interests': state.interests,
+        'photos': photoPayload,
+        'personality_prompts': state.personalityPrompts,
+        'opening_question': state.openingQuestion,
+        'opening_answer': state.openingAnswer,
+        'latitude': state.latitude,
+        'longitude': state.longitude,
+      };
+
+      Logger.info('📝 Step 2: Submitting registration payload to /register.php...', 'CompleteOnboarding');
+
+      // 4. Submit registration to /register.php
+      final registerResponse = await _registrationRepository.registerUser(registerPayload);
+
+      // 5. Check response status and store auth_token securely in Hive
+      final String statusLower = (registerResponse.status ?? '').toLowerCase();
+      final String? authToken = registerResponse.data?.authToken;
+      final String? userId = registerResponse.data?.userId;
+      final String? responseEmail = registerResponse.data?.email ?? storedEmail;
+
+      final bool isSuccess = statusLower == 'success' ||
+          statusLower == 'created' ||
+          statusLower == '200' ||
+          statusLower == '201' ||
+          (authToken != null && authToken.isNotEmpty);
+
+      if (isSuccess && authToken != null && authToken.isNotEmpty) {
+        Logger.info('🎉 Step 3: Registration successful! Storing auth_token in Hive...', 'CompleteOnboarding');
+        
+        await _hiveService.settingsBox.put('auth_token', authToken);
+        Logger.info('🔑 Securely stored auth_token in Hive: "$authToken"', 'CompleteOnboarding');
+
+        if (userId != null && userId.isNotEmpty) {
+          await _hiveService.settingsBox.put('user_id', userId);
+        }
+        if (responseEmail != null && responseEmail.isNotEmpty) {
+          await _hiveService.settingsBox.put('auth_user_email', responseEmail);
+        }
+
+        // Create local UserModel for profile & UI state
+        final newUser = UserModel(
+          id: userId ?? 'user_${DateTime.now().millisecondsSinceEpoch}',
+          name: state.firstName,
+          age: calculatedAge,
+          gender: state.gender ?? 'non-binary',
+          bio: state.personalityPrompts.isNotEmpty
+              ? state.personalityPrompts.entries.map((e) => '${e.key}: "${e.value}"').join('\n\n')
+              : 'Looking to connect and share new memories.',
+          photos: state.photos.isNotEmpty ? state.photos : (photoPayload.isNotEmpty ? photoPayload : ['https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=600']),
+          distance: 1.2,
+          isVerified: false,
+          isPremium: false,
+          interests: state.interests,
+          jobTitle: state.jobTitle?.isNotEmpty == true ? state.jobTitle! : 'Member',
+          company: state.company?.isNotEmpty == true ? state.company! : 'DatingApp',
+          locationName: state.hometown ?? 'New York, NY',
+          height: state.height,
+          datingIntention: state.intention,
+          latitude: state.latitude,
+          longitude: state.longitude,
+          education: state.education,
+          hometown: state.hometown,
+          languages: state.languages,
+          exercise: state.exercise,
+          diet: state.diet,
+          pets: state.pets,
+          sleepSchedule: state.sleepSchedule,
+          communicationStyle: state.communicationStyle,
+          loveLanguage: state.loveLanguage,
+          zodiac: state.zodiac,
+          familyPlans: state.familyPlans,
+          politics: state.politics,
+          religion: state.religion,
+          drinking: state.drinking,
+          smoking: state.smoking,
+          personalityPrompts: state.personalityPrompts,
+          openingMove: state.openingQuestion != null && state.openingAnswer!.isNotEmpty
+              ? {'question': state.openingQuestion!, 'answer': state.openingAnswer!}
+              : null,
+        );
+
+        await _hiveService.usersBox.put(newUser.id, jsonEncode(newUser.toJson()));
+        await _hiveService.settingsBox.put('is_onboarding_completed', true);
+        await _hiveService.settingsBox.put('is_authenticated', true);
+        await _hiveService.settingsBox.put('has_seen_swipe_tutorial', false);
+        await _hiveService.settingsBox.delete(_draftKey);
+
+        Logger.info('==================================================', 'CompleteOnboarding');
+        return RegistrationResult(isSuccess: true);
+      } else {
+        String errorMsg = registerResponse.message ?? 'Registration failed. Please try again.';
+        if (registerResponse.data?.errors != null && registerResponse.data!.errors!.isNotEmpty) {
+          final errMap = registerResponse.data!.errors!;
+          final details = errMap.entries.map((e) => '${e.key}: ${e.value}').join(', ');
+          errorMsg = '$errorMsg ($details)';
+        }
+        Logger.error('❌ Registration failed with message: $errorMsg', null, null, 'CompleteOnboarding');
+        return RegistrationResult(isSuccess: false, errorMessage: errorMsg);
+      }
     } catch (e, stack) {
-      Logger.error('Failed to complete onboarding', e, stack, 'OnboardingViewModel');
-      return false;
+      Logger.error('💥 Error completing registration', e, stack, 'CompleteOnboarding');
+      return RegistrationResult(isSuccess: false, errorMessage: 'Network error occurred: ${e.toString()}');
+    } finally {
+      state = state.copyWith(isLoading: false);
+    }
+  }
+
+  /// Upload active selected photos to the server endpoint /upload-photo.php
+  Future<UploadPhoto> uploadPhotos([List<String>? targetPhotos]) async {
+    final photosToUpload = targetPhotos ?? state.photos;
+    if (photosToUpload.isEmpty) {
+      Logger.warning('No photo files available to upload.', 'OnboardingViewModel');
+      return UploadPhoto(status: 'error', message: 'No photos selected to upload.');
+    }
+    state = state.copyWith(isLoading: true);
+    try {
+      final response = await _photoRepository.uploadPhotos(photosToUpload);
+      if (response.status == 'success' && response.data?.filenames != null && response.data!.filenames!.isNotEmpty) {
+        final serverFilenames = response.data!.filenames!;
+        state = state.copyWith(uploadedPhotoFilenames: serverFilenames);
+        _saveDraft();
+        Logger.info('Stored uploaded server filenames in OnboardingState.uploadedPhotoFilenames: $serverFilenames', 'OnboardingViewModel');
+      }
+      return response;
+    } catch (e, stack) {
+      Logger.error('Failed to upload photos in viewmodel', e, stack, 'OnboardingViewModel');
+      return UploadPhoto(status: 'error', message: e.toString());
+    } finally {
+      state = state.copyWith(isLoading: false);
     }
   }
 }
@@ -507,5 +650,11 @@ class OnboardingViewModel extends StateNotifier<OnboardingState> {
 final onboardingViewModelProvider =
     StateNotifierProvider<OnboardingViewModel, OnboardingState>((ref) {
   final locationRepo = ref.read(locationRepositoryProvider);
-  return OnboardingViewModel(locationRepository: locationRepo);
+  final photoRepo = ref.read(photoRepositoryProvider);
+  final registrationRepo = ref.read(registrationRepositoryProvider);
+  return OnboardingViewModel(
+    locationRepository: locationRepo,
+    photoRepository: photoRepo,
+    registrationRepository: registrationRepo,
+  );
 });

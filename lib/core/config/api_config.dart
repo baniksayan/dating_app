@@ -11,4 +11,6 @@ class ApiConfig {
   static const String loginSendOtp = '/login-send-otp.php';
   static const String loginVerifyOtp = '/login-verify-otp.php';
   static const String resendOtp = '/resend-otp.php';
+  static const String uploadPhoto = '/upload-photo.php';
+  static const String register = '/register.php';
 }

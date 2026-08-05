@@ -172,10 +172,15 @@ class _OnboardingPhotoGridState extends State<OnboardingPhotoGrid> {
           boxShadow: AppShadows.cardFloating,
         ),
         clipBehavior: Clip.antiAlias,
-        child: Image.file(
-          File(path),
-          fit: BoxFit.cover,
-        ),
+        child: File(path).existsSync()
+            ? Image.file(
+                File(path),
+                fit: BoxFit.cover,
+              )
+            : Container(
+                color: context.colors.surface,
+                child: const Icon(CupertinoIcons.photo, color: Colors.white30),
+              ),
       ),
     );
   }
@@ -189,6 +194,8 @@ class _OnboardingPhotoGridState extends State<OnboardingPhotoGrid> {
     bool isUploading,
   ) {
     final bool isMain = index == 0;
+
+    final bool fileExists = hasImage && File(imagePath).existsSync();
 
     return Container(
       decoration: BoxDecoration(
@@ -209,7 +216,7 @@ class _OnboardingPhotoGridState extends State<OnboardingPhotoGrid> {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          if (hasImage) ...[
+          if (fileExists) ...[
             // Photo view
             Image.file(
               File(imagePath),

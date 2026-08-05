@@ -307,8 +307,9 @@ class AuthRepositoryImpl implements AuthRepository {
       if (verifyOtpResponse.status == 'success') {
         final token = verifyOtpResponse.data?.registrationToken ?? '';
         await _hiveService.settingsBox.put('is_authenticated', true);
+        await _hiveService.settingsBox.put('is_onboarding_completed', false);
         await _hiveService.settingsBox.put('registration_token', token);
-        await _hiveService.settingsBox.put('auth_token', token);
+        await _hiveService.settingsBox.delete('auth_token');
         await _hiveService.settingsBox.put('auth_user_email', email);
         Logger.info(
           '🔒 Securely stored registration_token in local Hive storage: "$token"',
@@ -529,8 +530,9 @@ class MockAuthRepository implements AuthRepository {
     );
     const mockToken = 'mock_reg_token_xyz_123';
     await _hiveService.settingsBox.put('is_authenticated', true);
+    await _hiveService.settingsBox.put('is_onboarding_completed', false);
     await _hiveService.settingsBox.put('registration_token', mockToken);
-    await _hiveService.settingsBox.put('auth_token', mockToken);
+    await _hiveService.settingsBox.delete('auth_token');
     await _hiveService.settingsBox.put('auth_user_email', email);
 
     return VerifyOtp(

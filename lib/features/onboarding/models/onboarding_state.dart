@@ -25,11 +25,13 @@ class OnboardingState {
   final String? religion;
   final List<String> interests;
   final List<String> photos; // Local image paths
+  final List<String> uploadedPhotoFilenames; // Server filenames returned from upload-photo.php
   final Map<String, String> personalityPrompts; // prompt -> answer
   final String? openingQuestion;
   final String? openingAnswer;
   final double? latitude;
   final double? longitude;
+  final bool isLoading;
 
   const OnboardingState({
     this.currentStep = 1,
@@ -58,11 +60,13 @@ class OnboardingState {
     this.religion,
     this.interests = const [],
     this.photos = const [],
+    this.uploadedPhotoFilenames = const [],
     this.personalityPrompts = const {},
     this.openingQuestion,
     this.openingAnswer = '',
     this.latitude,
     this.longitude,
+    this.isLoading = false,
   });
 
   OnboardingState copyWith({
@@ -109,6 +113,7 @@ class OnboardingState {
     bool clearReligion = false,
     List<String>? interests,
     List<String>? photos,
+    List<String>? uploadedPhotoFilenames,
     Map<String, String>? personalityPrompts,
     String? openingQuestion,
     bool clearOpeningQuestion = false,
@@ -117,6 +122,7 @@ class OnboardingState {
     double? longitude,
     bool clearLatitude = false,
     bool clearLongitude = false,
+    bool? isLoading,
   }) {
     return OnboardingState(
       currentStep: currentStep ?? this.currentStep,
@@ -145,11 +151,13 @@ class OnboardingState {
       religion: clearReligion ? null : (religion ?? this.religion),
       interests: interests ?? this.interests,
       photos: photos ?? this.photos,
+      uploadedPhotoFilenames: uploadedPhotoFilenames ?? this.uploadedPhotoFilenames,
       personalityPrompts: personalityPrompts ?? this.personalityPrompts,
       openingQuestion: clearOpeningQuestion ? null : (openingQuestion ?? this.openingQuestion),
       openingAnswer: openingAnswer ?? this.openingAnswer,
       latitude: clearLatitude ? null : (latitude ?? this.latitude),
       longitude: clearLongitude ? null : (longitude ?? this.longitude),
+      isLoading: isLoading ?? this.isLoading,
     );
   }
 
@@ -181,6 +189,7 @@ class OnboardingState {
       'religion': religion,
       'interests': interests,
       'photos': photos,
+      'uploadedPhotoFilenames': uploadedPhotoFilenames,
       'personalityPrompts': personalityPrompts,
       'openingQuestion': openingQuestion,
       'openingAnswer': openingAnswer,
@@ -217,6 +226,7 @@ class OnboardingState {
       religion: json['religion'] as String?,
       interests: (json['interests'] as List<dynamic>?)?.map((e) => e as String).toList() ?? [],
       photos: (json['photos'] as List<dynamic>?)?.map((e) => e as String).toList() ?? [],
+      uploadedPhotoFilenames: (json['uploadedPhotoFilenames'] as List<dynamic>?)?.map((e) => e as String).toList() ?? [],
       personalityPrompts: (json['personalityPrompts'] as Map<dynamic, dynamic>?)?.map(
         (k, v) => MapEntry(k as String, v as String),
       ) ?? const {},
